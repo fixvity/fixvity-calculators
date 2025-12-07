@@ -9,252 +9,239 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  /* ---- Reset + tokens ---- */
   :root{
     --bg:#f7fbfd;
     --card:#ffffff;
     --accent:#1f6fb6;
     --muted:#6b7280;
-    --radius:10px;
-    --shadow: 0 6px 18px rgba(0,0,0,0.06);
-    --container-max:980px;
+    --radius:12px;
+    --shadow: 0 8px 28px rgba(10,20,30,0.06);
+    --container-max:1100px;
   }
+
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#111;background:var(--bg);-webkit-font-smoothing:antialiased}
   a{color:var(--accent);text-decoration:none}
 
-  /* ---- Layout ---- */
-  .wrap{max-width:var(--container-max);margin:18px auto;padding:16px}
-  header h1{margin:0;font-size:34px;color:var(--accent)}
-  header p.lead{margin:8px 0 18px;color:var(--muted)}
+  /* container */
+  .wrap{max-width:var(--container-max);margin:22px auto;padding:18px}
+  header h1{margin:0;font-size:36px;color:var(--accent)}
+  header p.lead{margin:8px 0 18px;color:var(--muted);font-size:16px}
 
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:18px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
 
-  /* ---- grid ---- */
-  .grid{display:grid;gap:12px;grid-template-columns: 1fr 420px;}
-  @media (max-width:980px){ .grid{grid-template-columns:1fr;} }
+  /* grid layout: form left, results right on wide screens */
+  .grid{display:grid;gap:18px;grid-template-columns: 1fr 430px;}
+  @media (max-width:1024px){ .grid{grid-template-columns:1fr;} }
 
-  /* left form */
-  form .group{display:grid;gap:8px;margin-bottom:12px}
-  label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
-  input[type="text"], input[type="number"], select{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:6px;font-size:16px}
-  .row{display:flex;gap:12px}
-  .row .col{flex:1}
+  /* form controls */
+  .form-row{display:flex;gap:12px}
+  .col{flex:1}
+  .form-group{margin-bottom:12px}
+  label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
+  input[type="text"], input[type="number"], select{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;background:#fff}
+  .small{font-size:13px;color:var(--muted)}
 
-  .tabs{display:flex;gap:8px;margin-bottom:12px}
-  .tab{padding:12px 18px;border-radius:6px;background:#efefef;color:#243;cursor:pointer}
-  .tab.active{background:var(--accent);color:#fff;font-weight:700}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .btn{display:inline-block;padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  .btn.alt{background:#eef6fb;color:var(--accent);border:1px solid #dfeffb}
 
-  .btn{display:inline-block;padding:10px 18px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
-  .btn.secondary{background:#eef3f8;color:var(--accent);border:1px solid #d6e7fb}
+  /* results area */
+  .results{display:flex;flex-direction:column;gap:14px}
+  .result-row{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border-radius:8px;border:1px solid #f1f5f9}
+  .result-row h3{margin:0;color:var(--accent);font-size:16px}
+  .result-row .value{font-weight:700;font-size:18px}
 
-  /* right results */
-  .results{display:flex;flex-direction:column;gap:12px}
-  .stat{background:#fff;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid #f0f4f8}
-  .stat h3{margin:0;font-size:18px;color:var(--accent)}
-  .stat p{margin:0;color:var(--muted)}
-
-  /* charts */
+  /* charts: give containers explicit height so Chart.js can fill */
   .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow)}
-  canvas{width:100% !important;height:240px !important}
+  .chartBox{height:260px}            /* default chart height (desktop & tablet) */
+  .chartBox.tall{height:300px}
+  @media (max-width:600px){
+    .chartBox{height:220px}
+    .chartBox.tall{height:260px}
+  }
 
-  /* table */
-  .tableWrap{overflow:auto;background:transparent}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
+  /* schedule table */
+  .tableWrap{margin-top:10px;overflow:auto;background:transparent}
+  table{width:100%;border-collapse:collapse}
   th,td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
   th{background:#2f6b9f;color:#fff}
-  .table-inline{display:block;overflow:auto}
+  .tableToggle{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .tabBtn{padding:10px 14px;border-radius:8px;border:1px solid #dfe6ee;background:#f7fbff;cursor:pointer}
+  .tabBtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  /* small note and print */
-  .tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .tools .small{color:var(--muted);font-size:13px}
+  /* responsive tweaks: single-column stacking on tiny screens */
+  @media (max-width:480px){
+    header h1{font-size:28px}
+    input[type="number"], input[type="text"]{font-size:15px;padding:10px}
+    .chartBox{height:200px}
+  }
+
+  /* print */
   @media print{
+    .controls, label, .small, .tabBtn { display:none !important; }
     body{background:#fff}
     .wrap{max-width:100%;padding:0}
-    header,p.lead,.tab,.btn,.tools{display:none}
-    .card{box-shadow:none;border-radius:0}
   }
+
 </style>
 </head>
 <body>
   <div class="wrap">
+
     <header>
       <h1>Auto Loan Calculator</h1>
       <p class="lead">Monthly payment, amortization schedule, charts, and printable results. Select currency and view annual or monthly breakdowns.</p>
     </header>
 
-    <div class="card grid">
-      <!-- LEFT: form -->
-      <div>
-        <div class="tabs" aria-hidden="false">
-          <div class="tab active" id="tab-total">Total Price</div>
-          <div class="tab" id="tab-month">Monthly Payment</div>
+    <!-- main card: currency top + form + results -->
+    <div class="card">
+      <!-- currency moved to top as requested -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="flex:1;min-width:220px">
+          <label for="currencyTop">Currency & Format</label>
+          <select id="currencyTop" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8">
+            <option value="USD">USD - $</option>
+            <option value="EUR">EUR - €</option>
+            <option value="CAD">CAD - $</option>
+            <option value="GBP">GBP - £</option>
+            <option value="JPY">JPY - ¥</option>
+            <option value="INR">INR - ₹</option>
+          </select>
+          <div class="small" style="margin-top:6px">Exchange rates are example values — change in code if needed.</div>
         </div>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="btn" id="calc">Calculate</button>
+          <button class="btn alt" id="reset">Reset</button>
+          <button class="btn alt" id="printBtn">Print</button>
+          <button class="btn alt" id="csv">Download CSV</button>
+        </div>
+      </div>
 
-        <form id="loanForm" class="card" onsubmit="return false;">
-          <div class="group">
-            <label for="price">Auto Price</label>
-            <input id="price" type="number" min="0" value="50000" />
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <div class="group">
-                <label for="term">Loan Term</label>
-                <input id="term" type="number" min="1" value="60" />
-                <div class="small">Enter months (e.g. 60)</div>
-              </div>
+      <div class="grid">
+        <!-- LEFT: form -->
+        <div>
+          <form id="loanForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="price">Auto Price</label>
+              <input id="price" type="number" min="0" value="50000" />
             </div>
-            <div class="col">
-              <div class="group">
+
+            <div class="form-row" style="margin-bottom:8px">
+              <div class="col form-group">
+                <label for="term">Loan Term (months)</label>
+                <input id="term" type="number" min="1" value="60" />
+              </div>
+              <div class="col form-group">
                 <label for="rate">Interest Rate (%)</label>
                 <input id="rate" type="number" step="0.001" value="5" min="0" />
               </div>
             </div>
-          </div>
 
-          <div class="group">
-            <label for="cash">Cash incentives</label>
-            <input id="cash" type="number" value="0" />
-          </div>
+            <div class="form-group">
+              <label for="cash">Cash incentives</label>
+              <input id="cash" type="number" value="0" />
+            </div>
 
-          <div class="row">
-            <div class="col">
-              <div class="group">
+            <div class="form-row">
+              <div class="col form-group">
                 <label for="down">Down Payment</label>
                 <input id="down" type="number" value="10000" />
               </div>
-            </div>
-            <div class="col">
-              <div class="group">
+              <div class="col form-group">
                 <label for="tradeValue">Trade-in Value</label>
                 <input id="tradeValue" type="number" value="0" />
               </div>
             </div>
-          </div>
 
-          <div class="row">
-            <div class="col">
-              <div class="group">
+            <div class="form-row">
+              <div class="col form-group">
                 <label for="owedTrade">Amount Owed on Trade</label>
                 <input id="owedTrade" type="number" value="0" />
               </div>
-            </div>
-            <div class="col">
-              <div class="group">
-                <label for="state">Your State (optional)</label>
-                <select id="state">
-                  <option value="">-- Select --</option>
-                  <option>CA</option><option>NY</option><option>TX</option>
-                </select>
-              </div>
-            </div>
-          </div>
 
-          <div class="row">
-            <div class="col">
-              <div class="group">
+              <!-- removed "Your State (optional)" as requested -->
+              <div class="col form-group" style="display:none"></div>
+            </div>
+
+            <div class="form-row">
+              <div class="col form-group">
                 <label for="salesTax">Sales Tax (%)</label>
                 <input id="salesTax" type="number" step="0.01" value="7" />
               </div>
-            </div>
-            <div class="col">
-              <div class="group">
+              <div class="col form-group">
                 <label for="fees">Title / Registration / Fees ($)</label>
                 <input id="fees" type="number" value="2000" />
               </div>
             </div>
-          </div>
 
-          <div class="group">
-            <label for="currency">Currency & Format</label>
-            <select id="currency">
-              <option value="USD">USD - $</option>
-              <option value="EUR">EUR - €</option>
-              <option value="CAD">CAD - $</option>
-              <option value="GBP">GBP - £</option>
-              <option value="JPY">JPY - ¥</option>
-              <option value="INR">INR - ₹</option>
-            </select>
-            <div class="small">Exchange rates are example values — edit rates in code to customize.</div>
-          </div>
-
-          <div class="row" style="align-items:center;margin-top:8px;">
-            <button class="btn" id="calcBtn" type="button">Calculate</button>
-            <button class="btn secondary" type="button" id="resetBtn">Reset</button>
-            <div style="flex:1"></div>
-            <button class="btn secondary" id="printBtn" type="button">Print</button>
-            <button class="btn secondary" id="csvBtn" type="button">Download CSV</button>
-          </div>
-        </form>
-      </div>
-
-      <!-- RIGHT: results -->
-      <div class="results">
-        <div class="stat">
-          <div>
-            <h3 id="vehiclePrice">Vehicle Price</h3>
-            <p class="small" id="vehicleSub">Summary</p>
-          </div>
-          <div style="text-align:right">
-            <div id="vehiclePriceVal" style="font-size:20px;font-weight:700"></div>
-          </div>
+            <div class="form-group">
+              <label for="note">Notes</label>
+              <div class="small">Tip: fees/tax are included in the loan calculation by default for consistent totals. Edit code to change this behavior.</div>
+            </div>
+          </form>
         </div>
 
-        <div class="stat">
-          <div>
-            <p class="small">Total Loan Amount</p>
-            <h3 id="totalLoan"></h3>
+        <!-- RIGHT: results & charts -->
+        <div class="results">
+          <div class="result-row">
+            <div>
+              <h3>Vehicle Price</h3>
+              <div class="small">Loan details & results</div>
+            </div>
+            <div class="value" id="vehiclePriceVal">$0.00</div>
           </div>
-          <div style="text-align:right">
-            <p class="small">Monthly Payment</p>
-            <h3 id="monthlyPayment"></h3>
+
+          <div class="result-row">
+            <div>
+              <div class="small">Total Loan Amount</div>
+              <h3 id="totalLoanVal">$0.00</h3>
+            </div>
+            <div>
+              <div class="small">Monthly Payment</div>
+              <h3 id="monthlyVal">$0.00</h3>
+            </div>
           </div>
-        </div>
 
-        <div class="chartWrap card">
-          <canvas id="donutChart" aria-label="Loan breakdown chart"></canvas>
-        </div>
+          <div class="chartWrap">
+            <div class="chartBox tall">
+              <canvas id="donut"></canvas>
+            </div>
+          </div>
 
-        <div class="chartWrap card">
-          <canvas id="amortChart" aria-label="Amortization line chart"></canvas>
+          <div class="chartWrap">
+            <div class="chartBox">
+              <canvas id="amort"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Amortization schedule card -->
+    <!-- Schedule card -->
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;gap:12px;align-items:center">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
           <h2 style="margin:0">Amortization schedule</h2>
           <div class="small">View annual summary or monthly detailed schedule</div>
         </div>
-
-        <div>
-          <button class="tab active" id="viewAnnual">Annual Schedule</button>
-          <button class="tab" id="viewMonthly">Monthly Schedule</button>
+        <div class="tableToggle">
+          <button class="tabBtn active" id="btnAnnual">Annual Schedule</button>
+          <button class="tabBtn" id="btnMonthly">Monthly Schedule</button>
         </div>
       </div>
 
-      <div class="tableWrap" id="scheduleWrap" style="margin-top:12px">
-        <!-- schedule tables will be injected here -->
-      </div>
+      <div id="scheduleWrap" class="tableWrap card" style="margin-top:12px;padding:12px"></div>
     </div>
-
   </div>
 
 <script>
-/* ====== Data & helpers ====== */
-const conversionRates = {
-  // these are example rates relative to USD — change as you like
-  USD: 1,
-  EUR: 0.92,
-  CAD: 1.34,
-  GBP: 0.78,
-  JPY: 153,
-  INR: 83
-};
-
+/* ----------------------
+  Helper formatting & config
+   - currency formatting per selected currency
+   - CONVERSION: currently display uses selected currency (no automatic conversion between the user's inputs),
+     but you can easily add conversion by applying conversionRates in the calculate function.
+-----------------------*/
 const currencyLocales = {
   USD: { locale: 'en-US', currency: 'USD' },
   EUR: { locale: 'de-DE', currency: 'EUR' },
@@ -263,69 +250,75 @@ const currencyLocales = {
   JPY: { locale: 'ja-JP', currency: 'JPY' },
   INR: { locale: 'en-IN', currency: 'INR' }
 };
-
 function moneyFmt(amount, code='USD'){
   const cfg = currencyLocales[code] || currencyLocales.USD;
   try {
     return new Intl.NumberFormat(cfg.locale, { style:'currency', currency: cfg.currency, maximumFractionDigits:2 }).format(amount);
   } catch(e){
-    return (amount).toFixed(2);
+    return amount.toFixed(2);
   }
 }
 
-/* ====== DOM ====== */
-const el = id=>document.getElementById(id);
+/* DOM helpers */
+const $ = id => document.getElementById(id);
+const get = selector => document.querySelector(selector);
+
+/* Inputs */
 const inputs = {
-  price: el('price'),
-  term: el('term'),
-  rate: el('rate'),
-  cash: el('cash'),
-  down: el('down'),
-  tradeValue: el('tradeValue'),
-  owedTrade: el('owedTrade'),
-  salesTax: el('salesTax'),
-  fees: el('fees'),
-  currency: el('currency'),
-  calcBtn: el('calcBtn'),
-  resetBtn: el('resetBtn'),
-  printBtn: el('printBtn'),
-  csvBtn: el('csvBtn')
+  price: $('price'),
+  term: $('term'),
+  rate: $('rate'),
+  cash: $('cash'),
+  down: $('down'),
+  tradeValue: $('tradeValue'),
+  owedTrade: $('owedTrade'),
+  salesTax: $('salesTax'),
+  fees: $('fees'),
+  currencyTop: $('currencyTop'),
+  calcBtn: $('calc'),
+  resetBtn: $('reset'),
+  printBtn: $('printBtn'),
+  csvBtn: $('csv')
 };
 
-/* ====== Charts ====== */
-let donutChart = null, amortChart = null;
-function initCharts(){
-  const donutCtx = document.getElementById('donutChart').getContext('2d');
-  donutChart = new Chart(donutCtx, {
+/* Charts */
+let donutChart=null, amortChart=null;
+function createCharts(){
+  const donutCtx = document.getElementById('donut').getContext('2d');
+  donutChart = new Chart(donutCtx,{
     type:'doughnut',
-    data:{
-      labels:['Principal','Interest'],
-      datasets:[{data:[80,20],backgroundColor:['#1f77b4','#7ac142'],borderWidth:0}]
-    },
-    options:{plugins:{legend:{position:'right'}}}
+    data:{ labels:['Principal','Interest'], datasets:[{data:[1,1], backgroundColor:['#1f77b4','#7ac142']} ]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'right'}}
+    }
   });
 
-  const amortCtx = document.getElementById('amortChart').getContext('2d');
-  amortChart = new Chart(amortCtx, {
+  const amortCtx = document.getElementById('amort').getContext('2d');
+  amortChart = new Chart(amortCtx,{
     type:'line',
-    data:{labels:[],datasets:[
-      {label:'Balance',data:[],borderColor:'#1f77b4',fill:false},
-      {label:'Interest',data:[],borderColor:'#7ac142',fill:false},
-      {label:'Payment',data:[],borderColor:'#c33',fill:false}
+    data:{ labels:[], datasets:[
+      {label:'Balance',data:[],borderColor:'#1f77b4',fill:false,pointRadius:3},
+      {label:'Interest',data:[],borderColor:'#7ac142',fill:false,pointRadius:2},
+      {label:'Payment',data:[],borderColor:'#d44',fill:false,pointRadius:2}
     ]},
-    options:{scales:{x:{title:{display:true,text:'Month'}}}}
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{ title:{display:true,text:'Month'} },
+        y:{ title:{display:false} }
+      },
+      plugins:{legend:{position:'top'}}
+    }
   });
 }
 
-/* ====== Core calculation ====== */
-/*
-  Standard amortization with sales tax and optional fees added to loan or paid upfront.
-  We compute monthly payment on financed amount, and create amortization rows.
-*/
+/* Calculation core (amortization) */
 function calculate(){
-  const currency = inputs.currency.value;
-  const priceUSD = Number(inputs.price.value) || 0;
-  const price = priceUSD; // user enters base price in selected currency — we'll convert display only
+  const currency = inputs.currencyTop.value || 'USD';
+  const price = Number(inputs.price.value) || 0;
   const term = Math.max(1, parseInt(inputs.term.value || 0));
   const annualRate = Number(inputs.rate.value) || 0;
   const monthlyRate = annualRate/100/12;
@@ -336,13 +329,13 @@ function calculate(){
   const salesTax = Number(inputs.salesTax.value) || 0;
   const fees = Number(inputs.fees.value) || 0;
 
-  // Determine loan principal:
+  // taxable base (user-entered currency)
   const taxableBase = Math.max(0, price - cash - down - trade + owedTrade);
   const salesTaxAmount = taxableBase * (salesTax/100);
-  const includeFeesInLoan = true; // choose: include fees/tax in loan — in screenshots they show separate amounts. We'll include them in show and loan
-  const loanAmount = taxableBase + (includeFeesInLoan ? salesTaxAmount + fees : 0);
+  // include fees and taxes into loan (as agreed earlier)
+  const loanAmount = taxableBase + salesTaxAmount + fees;
 
-  // monthly payment (standard formula)
+  // monthly payment formula
   let monthlyPayment = 0;
   if(monthlyRate === 0){
     monthlyPayment = loanAmount / term;
@@ -350,7 +343,7 @@ function calculate(){
     monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1+monthlyRate, -term)));
   }
 
-  // amortization schedule array
+  // build amortization schedule
   const schedule = [];
   let balance = loanAmount;
   let totalInterest = 0;
@@ -360,74 +353,53 @@ function calculate(){
     const payment = interest + principal;
     balance = Math.max(0, balance - principal);
     totalInterest += interest;
-    schedule.push({
-      month: m,
-      payment,
-      principal,
-      interest,
-      balance
-    });
+    schedule.push({month:m, payment, principal, interest, balance});
   }
 
   // annual aggregation
   const annual = {};
-  schedule.forEach(row=>{
-    const year = Math.ceil(row.month/12);
-    if(!annual[year]) annual[year] = {interest:0,principal:0,ending:0};
-    annual[year].interest += row.interest;
-    annual[year].principal += row.principal;
-    annual[year].ending = row.balance;
+  schedule.forEach(r=>{
+    const y = Math.ceil(r.month/12);
+    if(!annual[y]) annual[y] = {interest:0, principal:0, ending:0};
+    annual[y].interest += r.interest;
+    annual[y].principal += r.principal;
+    annual[y].ending = r.balance;
   });
 
-  // update UI results (convert display using selected currency)
-  const convert = (amtUSD)=>{
-    // we assume user entered values in the selected currency; for consistent display we won't convert numeric inputs.
-    // For clarity we treat internal numbers as "entered currency". So use moneyFmt directly.
-    return moneyFmt(amtUSD, currency);
-  };
+  // update UI
+  $('vehiclePriceVal').textContent = moneyFmt(price, currency);
+  $('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
+  $('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
 
-  el('vehiclePriceVal').textContent = convert(price);
-  el('vehiclePrice').textContent = 'Vehicle Price';
-  el('vehicleSub').textContent = 'Loan details & results';
-
-  el('totalLoan').textContent = convert(loanAmount);
-  el('monthlyPayment').textContent = convert(monthlyPayment);
-
-  // donut chart update
-  const principalTotal = loanAmount;
-  const interestTotal = totalInterest;
+  // donut chart
   if(donutChart){
-    donutChart.data.datasets[0].data = [principalTotal, interestTotal];
+    donutChart.data.datasets[0].data = [loanAmount, totalInterest];
     donutChart.update();
   }
 
-  // amort chart update
+  // amort chart
   if(amortChart){
-    amortChart.data.labels = schedule.map(s=>String(s.month));
-    amortChart.data.datasets[0].data = schedule.map(s=>s.balance);
-    amortChart.data.datasets[1].data = schedule.map(s=>s.interest);
-    amortChart.data.datasets[2].data = schedule.map(s=>s.payment);
+    amortChart.data.labels = schedule.map(r=>String(r.month));
+    amortChart.data.datasets[0].data = schedule.map(r=>r.balance);
+    amortChart.data.datasets[1].data = schedule.map(r=>r.interest);
+    amortChart.data.datasets[2].data = schedule.map(r=>r.payment);
     amortChart.update();
   }
 
-  // Build schedule tables HTML
-  buildScheduleTables(schedule, annual, currency);
+  // schedule tables
+  buildSchedule(schedule, annual, currency);
 }
 
-/* ====== Build schedule tables and CSV ====== */
-function buildScheduleTables(monthly, annual, currency){
-  const wrap = el('scheduleWrap');
-  wrap.innerHTML = '';
-
-  // Annual table
+/* Build schedules and attach CSV download */
+function buildSchedule(monthly, annual, currency){
+  const wrap = $('scheduleWrap');
   let annHtml = '<div id="annualTable"><table><thead><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Ending Balance</th></tr></thead><tbody>';
   Object.keys(annual).sort((a,b)=>a-b).forEach(y=>{
     annHtml += `<tr><td>${y}</td><td>${moneyFmt(annual[y].interest,currency)}</td><td>${moneyFmt(annual[y].principal,currency)}</td><td>${moneyFmt(annual[y].ending,currency)}</td></tr>`;
   });
   annHtml += '</tbody></table></div>';
 
-  // Monthly table (long)
-  let monHtml = '<div id="monthlyTable" style="display:none" class="table-inline"><table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></tr></thead><tbody>';
+  let monHtml = '<div id="monthlyTable" style="display:none"><table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></tr></thead><tbody>';
   monthly.forEach(r=>{
     monHtml += `<tr><td>${r.month}</td><td>${moneyFmt(r.payment,currency)}</td><td>${moneyFmt(r.principal,currency)}</td><td>${moneyFmt(r.interest,currency)}</td><td>${moneyFmt(r.balance,currency)}</td></tr>`;
   });
@@ -435,36 +407,24 @@ function buildScheduleTables(monthly, annual, currency){
 
   wrap.innerHTML = annHtml + monHtml;
 
-  // add toggle behavior
-  const btnA = el('viewAnnual'), btnM = el('viewMonthly');
-  btnA.classList.add('active');
-  btnM.classList.remove('active');
-  btnA.onclick = ()=>{el('annualTable').style.display='block';el('monthlyTable').style.display='none';btnA.classList.add('active');btnM.classList.remove('active')};
-  btnM.onclick = ()=>{el('annualTable').style.display='none';el('monthlyTable').style.display='block';btnM.classList.add('active');btnA.classList.remove('active')};
+  // toggles
+  const btnA = $('btnAnnual'), btnM = $('btnMonthly');
+  btnA.classList.add('active'); btnM.classList.remove('active');
+  btnA.onclick = ()=>{ $('annualTable').style.display='block'; $('monthlyTable').style.display='none'; btnA.classList.add('active'); btnM.classList.remove('active'); };
+  btnM.onclick = ()=>{ $('annualTable').style.display='none'; $('monthlyTable').style.display='block'; btnM.classList.add('active'); btnA.classList.remove('active'); };
 
   // CSV download
-  el('csvBtn').onclick = ()=>downloadCSV(monthly, currency);
+  $('csv').onclick = ()=> {
+    const rows = [['Month','Payment','Principal','Interest','EndingBalance']];
+    monthly.forEach(r => rows.push([r.month, r.payment.toFixed(2), r.principal.toFixed(2), r.interest.toFixed(2), r.balance.toFixed(2)]));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'amortization_monthly.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  };
 }
 
-/* CSV */
-function downloadCSV(monthly, currency){
-  const rows = [['Month','Payment','Principal','Interest','EndingBalance']];
-  monthly.forEach(r=>{
-    rows.push([r.month, r.payment.toFixed(2), r.principal.toFixed(2), r.interest.toFixed(2), r.balance.toFixed(2)]);
-  });
-  const csv = rows.map(r=>r.join(',')).join('\n');
-  const blob = new Blob([csv],{type:'text/csv'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'amortization_monthly.csv';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* ====== Helpers & events ====== */
+/* Reset */
 function resetForm(){
   inputs.price.value = 50000;
   inputs.term.value = 60;
@@ -475,30 +435,22 @@ function resetForm(){
   inputs.owedTrade.value = 0;
   inputs.salesTax.value = 7;
   inputs.fees.value = 2000;
-  inputs.currency.value = 'USD';
+  inputs.currencyTop.value = 'USD';
   calculate();
 }
 
-function setupUI(){
-  inputs.calcBtn.addEventListener('click', ()=>calculate());
-  inputs.resetBtn.addEventListener('click', ()=>resetForm());
-  inputs.printBtn.addEventListener('click', ()=>window.print());
-
-  // tabs on left top (visual)
-  document.getElementById('tab-total').addEventListener('click', ()=> {
-    document.getElementById('tab-total').classList.add('active');
-    document.getElementById('tab-month').classList.remove('active');
-  });
-  document.getElementById('tab-month').addEventListener('click', ()=> {
-    document.getElementById('tab-month').classList.add('active');
-    document.getElementById('tab-total').classList.remove('active');
-  });
-}
-
+/* Wire up UI */
 window.addEventListener('load', ()=>{
-  initCharts();
-  setupUI();
+  createCharts();
+  $('calc').addEventListener('click', calculate);
+  $('reset').addEventListener('click', resetForm);
+  $('printBtn').addEventListener('click', ()=>window.print());
+  // initial draw
   resetForm();
+
+  // Improve chart responsiveness within iframe: redraw on resize
+  let resizeTimer=null;
+  window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ if(amortChart) amortChart.resize(); if(donutChart) donutChart.resize(); },150); });
 });
 </script>
 </body>
