@@ -110,36 +110,6 @@
           </select>
           <div class="small" style="margin-top:6px">Exchange rates are example values — change in code if needed.</div>
         </div>
-        /* form rows: use 2-column grid so items align perfectly */
-.form-row{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:12px;
-  margin-bottom:8px;
-}
-
-/* single-column override (use when you want one full-width) */
-.form-row.single{
-  grid-template-columns: 1fr;
-}
-
-/* action buttons that live under the form (wrap on small screens) */
-.action-row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-  margin-top:12px;
-  justify-content:flex-start;
-}
-
-/* button sizing and appearance tweak */
-.btn{min-width:110px; padding:10px 14px; border-radius:10px; font-weight:600}
-.btn.alt{background:#eef6fb;color:var(--accent);border:1px solid #dfeffb}
-@media (max-width:420px){
-  .btn{min-width:48%;flex:1}
-  .action-row{justify-content:space-between}
-}
       </div>
 
       <div class="grid">
@@ -168,24 +138,15 @@
             </div>
 
             <div class="form-row">
-  <div class="form-group">
-    <label for="salesTax">Sales Tax (%)</label>
-    <input id="salesTax" type="number" step="0.01" value="7" />
-  </div>
-
-  <div class="form-group">
-    <label for="fees">Title / Registration / Fees ($)</label>
-    <input id="fees" type="number" value="2000" />
-  </div>
-</div>
-
-<!-- ACTION BUTTONS moved here below the form inputs -->
-<div class="action-row">
-  <button class="btn" id="calc">Calculate</button>
-  <button class="btn alt" id="reset">Reset</button>
-  <button class="btn alt" id="printBtn">Print</button>
-  <button class="btn alt" id="csv">Download CSV</button>
-</div>
+              <div class="col form-group">
+                <label for="down">Down Payment</label>
+                <input id="down" type="number" value="10000" />
+              </div>
+              <div class="col form-group">
+                <label for="tradeValue">Trade-in Value</label>
+                <input id="tradeValue" type="number" value="0" />
+              </div>
+            </div>
 
             <div class="form-row">
               <div class="col form-group">
@@ -210,6 +171,12 @@
 
             <div class="form-group">
               <label for="note">Notes</label>
+              <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="btn" id="calc">Calculate</button>
+          <button class="btn alt" id="reset">Reset</button>
+          <button class="btn alt" id="printBtn">Print</button>
+          <button class="btn alt" id="csv">Download CSV</button>
+              </div>
               <div class="small">Tip: fees/tax are included in the loan calculation by default for consistent totals. Edit code to change this behavior.</div>
             </div>
           </form>
