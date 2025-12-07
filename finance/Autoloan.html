@@ -1,90 +1,90 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Auto Loan Calculator — Fixvity</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auto Loan Calculator — Fixvity</title>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-<style>
-  :root{
-    --bg:#f7fbfd;
-    --card:#ffffff;
-    --accent:#1f6fb6;
-    --muted:#6b7280;
-    --radius:12px;
-    --shadow: 0 8px 28px rgba(10,20,30,0.06);
-    --container-max:1100px;
-  }
+  <style>
+    :root{
+      --accent:#1e6fb8;
+      --muted:#6b7280;
+      --card:#ffffff;
+      --bg:#f6fbff;
+      --radius:12px;
+      --shadow:0 6px 18px rgba(7,22,40,.06);
+      --form-gap:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#111;background:var(--bg);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:980px;margin:18px auto;padding:18px}
+    h1{font-size:38px;margin:8px 0;color:var(--accent)}
+    p.lead{margin:0 0 18px;color:var(--muted)}
 
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#111;background:var(--bg);-webkit-font-smoothing:antialiased}
-  a{color:var(--accent);text-decoration:none}
+    /* card */
+    .card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
 
-  /* container */
-  .wrap{max-width:var(--container-max);margin:22px auto;padding:18px}
-  header h1{margin:0;font-size:36px;color:var(--accent)}
-  header p.lead{margin:8px 0 18px;color:var(--muted);font-size:16px}
+    /* form grid */
+    .form-grid{display:grid;grid-template-columns:1fr;gap:var(--form-gap)}
+    @media(min-width:720px){ .form-grid{grid-template-columns:1fr 420px} }
 
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+    /* left form area */
+    .form-left{padding-right:12px}
+    .form-right{padding-left:12px}
 
-  /* grid layout: form left, results right on wide screens */
-  .grid{display:grid;gap:18px;grid-template-columns: 1fr 430px;}
-  @media (max-width:1024px){ .grid{grid-template-columns:1fr;} }
+    /* two-column rows inside form-left */
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+    .form-row.single{grid-template-columns:1fr}
+    @media(max-width:420px){ .form-row{grid-template-columns:1fr} }
 
-  /* form controls */
-  .form-row{display:flex;gap:12px}
-  .col{flex:1}
-  .form-group{margin-bottom:12px}
-  label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
-  input[type="text"], input[type="number"], select{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;background:#fff}
-  .small{font-size:13px;color:var(--muted)}
+    label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px}
+    input[type="number"], input[type="text"], select{
+      width:100%;padding:12px;border-radius:8px;border:1px solid #e6eef8;background:#fff;font-size:16px
+    }
+    .small{font-size:13px;color:var(--muted);margin-top:6px}
 
-  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
-  .btn{display:inline-block;padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
-  .btn.alt{background:#eef6fb;color:var(--accent);border:1px solid #dfeffb}
+    /* action row placed under fees */
+    .action-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;justify-content:flex-start}
+    .btn{min-width:120px;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600;background:var(--accent);color:#fff}
+    .btn.alt{background:#eef6fb;color:var(--accent);border:1px solid #cfe8fb}
+    @media(max-width:420px){ .btn{min-width:48%;flex:1} .action-row{justify-content:space-between} }
 
-  /* results area */
-  .results{display:flex;flex-direction:column;gap:14px}
-  .result-row{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border-radius:8px;border:1px solid #f1f5f9}
-  .result-row h3{margin:0;color:var(--accent);font-size:16px}
-  .result-row .value{font-weight:700;font-size:18px}
+    /* results */
+    .results{margin-top:18px;display:grid;grid-template-columns:1fr;gap:12px}
+    .totals{display:flex;gap:10px;flex-wrap:wrap}
+    .tile{flex:1;background:#f8fbff;border-radius:8px;padding:12px;border:1px solid #eef6fb}
+    .tile h3{margin:0;font-size:18px;color:var(--muted)}
+    .tile p{margin:6px 0 0;font-size:20px;color:var(--accent);font-weight:700}
 
-  /* charts: give containers explicit height so Chart.js can fill */
-  .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow)}
-  .chartBox{height:260px}            /* default chart height (desktop & tablet) */
-  .chartBox.tall{height:300px}
-  @media (max-width:600px){
-    .chartBox{height:220px}
-    .chartBox.tall{height:260px}
-  }
+    /* chart card */
+    .chart-wrap{background:#fff;border-radius:12px;padding:12px;box-shadow:var(--shadow)}
+    canvas{max-width:100%!important;height:auto!important}
 
-  /* schedule table */
-  .tableWrap{margin-top:10px;overflow:auto;background:transparent}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
-  th{background:#2f6b9f;color:#fff}
-  .tableToggle{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-  .tabBtn{padding:10px 14px;border-radius:8px;border:1px solid #dfe6ee;background:#f7fbff;cursor:pointer}
-  .tabBtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    /* amortization table */
+    .schedule-header{display:flex;gap:12px;align-items:center;margin:8px 0}
+    .schedule-tabs{margin-left:auto;display:flex;gap:8px}
+    .tab{padding:8px 12px;border-radius:8px;border:1px solid #dbeefb;background:#f3f9ff;color:var(--accent);cursor:pointer}
+    .tab.active{background:var(--accent);color:#fff}
 
-  /* responsive tweaks: single-column stacking on tiny screens */
-  @media (max-width:480px){
-    header h1{font-size:28px}
-    input[type="number"], input[type="text"]{font-size:15px;padding:10px}
-    .chartBox{height:200px}
-  }
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid #f3f6fa;text-align:left}
+    th{background:#2b6ba8;color:#fff;font-weight:700}
+    .center{text-align:center}
 
-  /* print */
-  @media print{
-    .controls, label, .small, .tabBtn { display:none !important; }
-    body{background:#fff}
-    .wrap{max-width:100%;padding:0}
-  }
+    /* print styles */
+    @media print{
+      body{background:#fff}
+      .action-row,.no-print{display:none}
+      .card{box-shadow:none;border:0}
+    }
 
-</style>
+    /* small helper */
+    .muted{color:var(--muted);font-size:13px}
+    .right{text-align:right}
+  </style>
 </head>
 <body>
   <div class="wrap">
@@ -94,364 +94,399 @@
       <p class="lead">Monthly payment, amortization schedule, charts, and printable results. Select currency and view annual or monthly breakdowns.</p>
     </header>
 
-    <!-- main card: currency top + form + results -->
     <div class="card">
-      <!-- currency moved to top as requested -->
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
-        <div style="flex:1;min-width:220px">
-          <label for="currencyTop">Currency & Format</label>
-          <select id="currencyTop" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8">
-            <option value="USD">USD - $</option>
-            <option value="EUR">EUR - €</option>
-            <option value="CAD">CAD - $</option>
-            <option value="GBP">GBP - £</option>
-            <option value="JPY">JPY - ¥</option>
-            <option value="INR">INR - ₹</option>
-          </select>
-          <div class="small" style="margin-top:6px">Exchange rates are example values — change in code if needed.</div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <button class="btn" id="calc">Calculate</button>
-          <button class="btn alt" id="reset">Reset</button>
-          <button class="btn alt" id="printBtn">Print</button>
-          <button class="btn alt" id="csv">Download CSV</button>
-        </div>
-      </div>
+      <div class="form-grid">
 
-      <div class="grid">
         <!-- LEFT: form -->
-        <div>
-          <form id="loanForm" onsubmit="return false;">
-            <div class="form-group">
-              <label for="price">Auto Price</label>
-              <input id="price" type="number" min="0" value="50000" />
+        <div class="form-left">
+          <!-- Currency -->
+          <div class="form-row single">
+            <div>
+              <label for="currency">Currency & Format</label>
+              <select id="currency">
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+                <option value="GBP">£ GBP</option>
+                <option value="CAD">$ CAD</option>
+                <option value="JPY">¥ JPY</option>
+                <option value="INR">₹ INR</option>
+              </select>
+              <div class="small">Exchange rates are example values — change them in code if needed.</div>
             </div>
+          </div>
 
-            <div class="form-row" style="margin-bottom:8px">
-              <div class="col form-group">
-                <label for="term">Loan Term (months)</label>
-                <input id="term" type="number" min="1" value="60" />
-              </div>
-              <div class="col form-group">
-                <label for="rate">Interest Rate (%)</label>
-                <input id="rate" type="number" step="0.001" value="5" min="0" />
-              </div>
-            </div>
-
+          <div class="form-row single">
             <div class="form-group">
+              <label for="amount">Auto Price</label>
+              <input id="amount" type="number" step="0.01" value="50000" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label for="months">Loan Term (months)</label>
+              <input id="months" type="number" value="60" />
+            </div>
+            <div>
+              <label for="rate">Interest Rate (%)</label>
+              <input id="rate" type="number" step="0.001" value="5" />
+            </div>
+          </div>
+
+          <div class="form-row single">
+            <div>
               <label for="cash">Cash incentives</label>
               <input id="cash" type="number" value="0" />
             </div>
+          </div>
 
-            <div class="form-row">
-              <div class="col form-group">
-                <label for="down">Down Payment</label>
-                <input id="down" type="number" value="10000" />
-              </div>
-              <div class="col form-group">
-                <label for="tradeValue">Trade-in Value</label>
-                <input id="tradeValue" type="number" value="0" />
-              </div>
+          <div class="form-row">
+            <div>
+              <label for="down">Down Payment</label>
+              <input id="down" type="number" value="10000" />
             </div>
-
-            <div class="form-row">
-              <div class="col form-group">
-                <label for="owedTrade">Amount Owed on Trade</label>
-                <input id="owedTrade" type="number" value="0" />
-              </div>
-
-              <!-- removed "Your State (optional)" as requested -->
-              <div class="col form-group" style="display:none"></div>
+            <div>
+              <label for="trade">Trade-in Value</label>
+              <input id="trade" type="number" value="0" />
             </div>
+          </div>
 
-            <div class="form-row">
-              <div class="col form-group">
-                <label for="salesTax">Sales Tax (%)</label>
-                <input id="salesTax" type="number" step="0.01" value="7" />
-              </div>
-              <div class="col form-group">
-                <label for="fees">Title / Registration / Fees ($)</label>
-                <input id="fees" type="number" value="2000" />
-              </div>
+          <div class="form-row single">
+            <div>
+              <label for="owed">Amount Owed on Trade</label>
+              <input id="owed" type="number" value="0" />
             </div>
+          </div>
 
-            <div class="form-group">
-              <label for="note">Notes</label>
-              <div class="small">Tip: fees/tax are included in the loan calculation by default for consistent totals. Edit code to change this behavior.</div>
+          <div class="form-row">
+            <div>
+              <label for="salesTax">Sales Tax (%)</label>
+              <input id="salesTax" type="number" step="0.01" value="7" />
             </div>
-          </form>
+            <div>
+              <label for="fees">Title / Registration / Fees ($)</label>
+              <input id="fees" type="number" value="2000" />
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS moved here below the form inputs -->
+          <div class="action-row no-print">
+            <button class="btn" id="calc">Calculate</button>
+            <button class="btn alt" id="reset">Reset</button>
+            <button class="btn alt" id="printBtn">Print</button>
+            <button class="btn alt" id="csv">Download CSV</button>
+          </div>
+
+          <div class="small muted" style="margin-top:10px">
+            Notes: Fees/tax are included in the loan calculation by default for consistent totals. Edit code if you want alternate behavior.
+          </div>
         </div>
 
-        <!-- RIGHT: results & charts -->
-        <div class="results">
-          <div class="result-row">
-            <div>
-              <h3>Vehicle Price</h3>
-              <div class="small">Loan details & results</div>
+        <!-- RIGHT: results / chart -->
+        <div class="form-right">
+          <div id="resultsArea" class="card">
+            <div class="totals">
+              <div class="tile">
+                <h3>Vehicle Price</h3>
+                <p id="outPrice">$50,000.00</p>
+              </div>
+              <div class="tile">
+                <h3>Total Loan Amount</h3>
+                <p id="outLoan">$40,000.00</p>
+              </div>
+              <div class="tile">
+                <h3>Monthly Payment</h3>
+                <p id="outPayment">$900.00</p>
+              </div>
             </div>
-            <div class="value" id="vehiclePriceVal">$0.00</div>
-          </div>
 
-          <div class="result-row">
-            <div>
-              <div class="small">Total Loan Amount</div>
-              <h3 id="totalLoanVal">$0.00</h3>
+            <div style="margin-top:12px" class="chart-wrap">
+              <canvas id="loanChart" aria-label="Loan chart"></canvas>
             </div>
-            <div>
-              <div class="small">Monthly Payment</div>
-              <h3 id="monthlyVal">$0.00</h3>
-            </div>
-          </div>
 
-          <div class="chartWrap">
-            <div class="chartBox tall">
-              <canvas id="donut"></canvas>
+            <div class="schedule-header">
+              <h3 style="margin:0">Amortization schedule</h3>
+              <div class="schedule-tabs">
+                <div class="tab active" id="tabAnnual">Annual Schedule</div>
+                <div class="tab" id="tabMonthly">Monthly Schedule</div>
+              </div>
             </div>
-          </div>
 
-          <div class="chartWrap">
-            <div class="chartBox">
-              <canvas id="amort"></canvas>
+            <div id="scheduleArea">
+              <table id="scheduleTable" role="table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Interest</th>
+                    <th>Principal</th>
+                    <th>Ending Balance</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
             </div>
+
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Schedule card -->
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div>
-          <h2 style="margin:0">Amortization schedule</h2>
-          <div class="small">View annual summary or monthly detailed schedule</div>
-        </div>
-        <div class="tableToggle">
-          <button class="tabBtn active" id="btnAnnual">Annual Schedule</button>
-          <button class="tabBtn" id="btnMonthly">Monthly Schedule</button>
-        </div>
-      </div>
-
-      <div id="scheduleWrap" class="tableWrap card" style="margin-top:12px;padding:12px"></div>
-    </div>
   </div>
 
 <script>
-/* ----------------------
-  Helper formatting & config
-   - currency formatting per selected currency
-   - CONVERSION: currently display uses selected currency (no automatic conversion between the user's inputs),
-     but you can easily add conversion by applying conversionRates in the calculate function.
------------------------*/
-const currencyLocales = {
-  USD: { locale: 'en-US', currency: 'USD' },
-  EUR: { locale: 'de-DE', currency: 'EUR' },
-  CAD: { locale: 'en-CA', currency: 'CAD' },
-  GBP: { locale: 'en-GB', currency: 'GBP' },
-  JPY: { locale: 'ja-JP', currency: 'JPY' },
-  INR: { locale: 'en-IN', currency: 'INR' }
+/* ---------------------------
+ Example exchange rates (edit)
+ --------------------------- */
+const exchangeRates = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  CAD: 1.36,
+  JPY: 154,
+  INR: 83
 };
-function moneyFmt(amount, code='USD'){
-  const cfg = currencyLocales[code] || currencyLocales.USD;
-  try {
-    return new Intl.NumberFormat(cfg.locale, { style:'currency', currency: cfg.currency, maximumFractionDigits:2 }).format(amount);
-  } catch(e){
-    return amount.toFixed(2);
-  }
+
+/* Formatting helpers */
+function formatCurrency(val, currency){
+  const rates = exchangeRates;
+  const rate = rates[currency] || 1;
+  const amount = Number(val) * rate;
+  let symbol = '$';
+  if(currency==='EUR') symbol = '€';
+  if(currency==='GBP') symbol = '£';
+  if(currency==='CAD') symbol = '$';
+  if(currency==='JPY') symbol = '¥';
+  if(currency==='INR') symbol = '₹';
+  // use en-US formatting, fallback simple
+  return symbol + Number(amount).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-/* DOM helpers */
-const $ = id => document.getElementById(id);
-const get = selector => document.querySelector(selector);
+/* DOM */
+const el = id => document.getElementById(id);
+const amountEl = el('amount'), monthsEl = el('months'), rateEl = el('rate'),
+      cashEl = el('cash'), downEl = el('down'), tradeEl = el('trade'), owedEl = el('owed'),
+      salesTaxEl = el('salesTax'), feesEl = el('fees'), currencyEl = el('currency');
 
-/* Inputs */
-const inputs = {
-  price: $('price'),
-  term: $('term'),
-  rate: $('rate'),
-  cash: $('cash'),
-  down: $('down'),
-  tradeValue: $('tradeValue'),
-  owedTrade: $('owedTrade'),
-  salesTax: $('salesTax'),
-  fees: $('fees'),
-  currencyTop: $('currencyTop'),
-  calcBtn: $('calc'),
-  resetBtn: $('reset'),
-  printBtn: $('printBtn'),
-  csvBtn: $('csv')
-};
+const outPrice = el('outPrice'), outLoan = el('outLoan'), outPayment = el('outPayment'),
+      scheduleTableBody = document.querySelector('#scheduleTable tbody');
 
-/* Charts */
-let donutChart=null, amortChart=null;
-function createCharts(){
-  const donutCtx = document.getElementById('donut').getContext('2d');
-  donutChart = new Chart(donutCtx,{
-    type:'doughnut',
-    data:{ labels:['Principal','Interest'], datasets:[{data:[1,1], backgroundColor:['#1f77b4','#7ac142']} ]},
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{position:'right'}}
+const calcBtn = el('calc'), resetBtn = el('reset'), printBtn = el('printBtn'), csvBtn = el('csv');
+
+let chart = null;
+
+/* Calculate loan */
+function calculateAndRender(){
+  const P_price = parseFloat(amountEl.value) || 0;
+  const months = Math.max(1, parseInt(monthsEl.value) || 0);
+  const annualRate = parseFloat(rateEl.value) || 0;
+  const monthlyRate = annualRate/100/12;
+  const cash = parseFloat(cashEl.value) || 0;
+  const down = parseFloat(downEl.value) || 0;
+  const trade = parseFloat(tradeEl.value) || 0;
+  const owed = parseFloat(owedEl.value) || 0;
+  const taxPercent = parseFloat(salesTaxEl.value) || 0;
+  const fees = parseFloat(feesEl.value) || 0;
+  const currency = currencyEl.value || 'USD';
+
+  // Effective price adjustments
+  const netPrice = P_price - cash - down - trade + owed;
+  // tax on price
+  const taxAmount = (taxPercent/100) * P_price;
+  // Loan amount includes fees and tax (common approach)
+  const loanAmount = Math.max(0, netPrice + taxAmount + fees);
+
+  // monthly payment formula (fixed)
+  let monthlyPayment;
+  if(monthlyRate === 0) {
+    monthlyPayment = loanAmount / months;
+  } else {
+    monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -months)));
+  }
+
+  // Build amortization arrays
+  const schedule = [];
+  let balance = loanAmount;
+  let totalInterest = 0, totalPrincipal = 0;
+  for(let m=1;m<=months;m++){
+    let interest = balance * monthlyRate;
+    let principal = monthlyPayment - interest;
+    // handle last payment rounding
+    if(m===months){
+      principal = balance;
+      monthlyPayment = principal + interest;
     }
-  });
+    balance = Math.max(0, balance - principal);
+    totalInterest += interest;
+    totalPrincipal += principal;
+    schedule.push({
+      period: m,
+      interest, principal, balance
+    });
+  }
 
-  const amortCtx = document.getElementById('amort').getContext('2d');
-  amortChart = new Chart(amortCtx,{
-    type:'line',
-    data:{ labels:[], datasets:[
-      {label:'Balance',data:[],borderColor:'#1f77b4',fill:false,pointRadius:3},
-      {label:'Interest',data:[],borderColor:'#7ac142',fill:false,pointRadius:2},
-      {label:'Payment',data:[],borderColor:'#d44',fill:false,pointRadius:2}
-    ]},
-    options:{
+  // Update header outputs (formatted)
+  outPrice.textContent = formatCurrency(P_price, currency);
+  outLoan.textContent = formatCurrency(loanAmount, currency);
+  outPayment.textContent = formatCurrency(monthlyPayment, currency);
+
+  // Render chart (Balance, Interest, Payment)
+  renderChart(schedule, currency);
+
+  // Render table — default shows annual summary
+  renderAnnual(schedule, currency);
+}
+
+/* Chart: show balance, interest & payment over months */
+function renderChart(schedule, currency){
+  const labels = schedule.map(s => s.period);
+  const balanceData = schedule.map(s => s.balance);
+  const interestData = schedule.map(s => s.interest);
+  const paymentData = schedule.map(s => s.interest + s.principal);
+
+  const ctx = document.getElementById('loanChart').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets:[
+        {label:'Balance', data: balanceData, borderColor:'#2b6ba8', backgroundColor:'transparent', tension:0.2, pointRadius:2},
+        {label:'Interest', data: interestData, borderColor:'#5db85d', backgroundColor:'transparent', tension:0.2, pointRadius:2},
+        {label:'Payment', data: paymentData, borderColor:'#d14b4b', backgroundColor:'transparent', tension:0.2, pointRadius:2}
+      ]
+    },
+    options: {
       responsive:true,
       maintainAspectRatio:false,
-      scales:{
-        x:{ title:{display:true,text:'Month'} },
-        y:{ title:{display:false} }
-      },
+      scales:{y:{beginAtZero:true}},
       plugins:{legend:{position:'top'}}
     }
   });
+  // constrain canvas height for responsive layout
+  document.getElementById('loanChart').style.height = '220px';
 }
 
-/* Calculation core (amortization) */
-function calculate(){
-  const currency = inputs.currencyTop.value || 'USD';
-  const price = Number(inputs.price.value) || 0;
-  const term = Math.max(1, parseInt(inputs.term.value || 0));
-  const annualRate = Number(inputs.rate.value) || 0;
-  const monthlyRate = annualRate/100/12;
-  const cash = Number(inputs.cash.value) || 0;
-  const down = Number(inputs.down.value) || 0;
-  const trade = Number(inputs.tradeValue.value) || 0;
-  const owedTrade = Number(inputs.owedTrade.value) || 0;
-  const salesTax = Number(inputs.salesTax.value) || 0;
-  const fees = Number(inputs.fees.value) || 0;
-
-  // taxable base (user-entered currency)
-  const taxableBase = Math.max(0, price - cash - down - trade + owedTrade);
-  const salesTaxAmount = taxableBase * (salesTax/100);
-  // include fees and taxes into loan (as agreed earlier)
-  const loanAmount = taxableBase + salesTaxAmount + fees;
-
-  // monthly payment formula
-  let monthlyPayment = 0;
-  if(monthlyRate === 0){
-    monthlyPayment = loanAmount / term;
-  } else {
-    monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1+monthlyRate, -term)));
+/* Render annual summary by grouping months into years */
+function renderAnnual(schedule, currency){
+  scheduleTableBody.innerHTML = '';
+  const monthsPerYear = 12;
+  const years = Math.ceil(schedule.length / monthsPerYear);
+  for(let y=0;y<years;y++){
+    const start = y*monthsPerYear;
+    const chunk = schedule.slice(start, start+monthsPerYear);
+    const yearIndex = y+1;
+    let sumInterest = 0, sumPrincipal = 0, endingBalance = 0;
+    chunk.forEach(row => { sumInterest += row.interest; sumPrincipal += row.principal; endingBalance = row.balance; });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>Year ${yearIndex}</td>
+                    <td>${formatCurrency(sumInterest, currency)}</td>
+                    <td>${formatCurrency(sumPrincipal, currency)}</td>
+                    <td>${formatCurrency(endingBalance, currency)}</td>`;
+    scheduleTableBody.appendChild(tr);
   }
+}
 
-  // build amortization schedule
+/* Render monthly schedule full */
+function renderMonthly(schedule, currency){
+  scheduleTableBody.innerHTML = '';
+  schedule.forEach(row=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>Month ${row.period}</td>
+                    <td>${formatCurrency(row.interest, currency)}</td>
+                    <td>${formatCurrency(row.principal, currency)}</td>
+                    <td>${formatCurrency(row.balance, currency)}</td>`;
+    scheduleTableBody.appendChild(tr);
+  });
+}
+
+/* build amortization schedule array for CSV or table functions */
+function buildSchedule(){
+  const P_price = parseFloat(amountEl.value) || 0;
+  const months = Math.max(1, parseInt(monthsEl.value) || 0);
+  const annualRate = parseFloat(rateEl.value) || 0;
+  const monthlyRate = annualRate/100/12;
+  const cash = parseFloat(cashEl.value) || 0;
+  const down = parseFloat(downEl.value) || 0;
+  const trade = parseFloat(tradeEl.value) || 0;
+  const owed = parseFloat(owedEl.value) || 0;
+  const taxPercent = parseFloat(salesTaxEl.value) || 0;
+  const fees = parseFloat(feesEl.value) || 0;
+
+  const netPrice = P_price - cash - down - trade + owed;
+  const taxAmount = (taxPercent/100) * P_price;
+  const loanAmount = Math.max(0, netPrice + taxAmount + fees);
+
+  let monthlyPayment;
+  if(monthlyRate === 0) monthlyPayment = loanAmount / months;
+  else monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -months)));
+
   const schedule = [];
   let balance = loanAmount;
-  let totalInterest = 0;
-  for(let m=1;m<=term;m++){
-    const interest = balance * monthlyRate;
-    const principal = Math.min(balance, monthlyPayment - interest);
-    const payment = interest + principal;
+  for(let m=1;m<=months;m++){
+    let interest = balance * monthlyRate;
+    let principal = monthlyPayment - interest;
+    if(m===months){
+      principal = balance;
+      monthlyPayment = principal + interest;
+    }
     balance = Math.max(0, balance - principal);
-    totalInterest += interest;
-    schedule.push({month:m, payment, principal, interest, balance});
+    schedule.push({period:m,interest,principal,balance,payment:monthlyPayment});
   }
+  return {schedule,loanAmount,monthlyPayment};
+}
 
-  // annual aggregation
-  const annual = {};
+/* CSV download */
+function downloadCSV(){
+  const currency = currencyEl.value || 'USD';
+  const {schedule,loanAmount,monthlyPayment} = buildSchedule();
+  let csv = 'Period,Interest,Principal,Payment,Ending Balance\n';
   schedule.forEach(r=>{
-    const y = Math.ceil(r.month/12);
-    if(!annual[y]) annual[y] = {interest:0, principal:0, ending:0};
-    annual[y].interest += r.interest;
-    annual[y].principal += r.principal;
-    annual[y].ending = r.balance;
+    csv += `${r.period},${r.interest.toFixed(2)},${r.principal.toFixed(2)},${r.payment.toFixed(2)},${r.balance.toFixed(2)}\n`;
   });
-
-  // update UI
-  $('vehiclePriceVal').textContent = moneyFmt(price, currency);
-  $('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
-  $('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
-
-  // donut chart
-  if(donutChart){
-    donutChart.data.datasets[0].data = [loanAmount, totalInterest];
-    donutChart.update();
-  }
-
-  // amort chart
-  if(amortChart){
-    amortChart.data.labels = schedule.map(r=>String(r.month));
-    amortChart.data.datasets[0].data = schedule.map(r=>r.balance);
-    amortChart.data.datasets[1].data = schedule.map(r=>r.interest);
-    amortChart.data.datasets[2].data = schedule.map(r=>r.payment);
-    amortChart.update();
-  }
-
-  // schedule tables
-  buildSchedule(schedule, annual, currency);
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'autoloan_schedule.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
-/* Build schedules and attach CSV download */
-function buildSchedule(monthly, annual, currency){
-  const wrap = $('scheduleWrap');
-  let annHtml = '<div id="annualTable"><table><thead><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Ending Balance</th></tr></thead><tbody>';
-  Object.keys(annual).sort((a,b)=>a-b).forEach(y=>{
-    annHtml += `<tr><td>${y}</td><td>${moneyFmt(annual[y].interest,currency)}</td><td>${moneyFmt(annual[y].principal,currency)}</td><td>${moneyFmt(annual[y].ending,currency)}</td></tr>`;
-  });
-  annHtml += '</tbody></table></div>';
-
-  let monHtml = '<div id="monthlyTable" style="display:none"><table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></tr></thead><tbody>';
-  monthly.forEach(r=>{
-    monHtml += `<tr><td>${r.month}</td><td>${moneyFmt(r.payment,currency)}</td><td>${moneyFmt(r.principal,currency)}</td><td>${moneyFmt(r.interest,currency)}</td><td>${moneyFmt(r.balance,currency)}</td></tr>`;
-  });
-  monHtml += '</tbody></table></div>';
-
-  wrap.innerHTML = annHtml + monHtml;
-
-  // toggles
-  const btnA = $('btnAnnual'), btnM = $('btnMonthly');
-  btnA.classList.add('active'); btnM.classList.remove('active');
-  btnA.onclick = ()=>{ $('annualTable').style.display='block'; $('monthlyTable').style.display='none'; btnA.classList.add('active'); btnM.classList.remove('active'); };
-  btnM.onclick = ()=>{ $('annualTable').style.display='none'; $('monthlyTable').style.display='block'; btnM.classList.add('active'); btnA.classList.remove('active'); };
-
-  // CSV download
-  $('csv').onclick = ()=> {
-    const rows = [['Month','Payment','Principal','Interest','EndingBalance']];
-    monthly.forEach(r => rows.push([r.month, r.payment.toFixed(2), r.principal.toFixed(2), r.interest.toFixed(2), r.balance.toFixed(2)]));
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv],{type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'amortization_monthly.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-  };
-}
-
-/* Reset */
-function resetForm(){
-  inputs.price.value = 50000;
-  inputs.term.value = 60;
-  inputs.rate.value = 5;
-  inputs.cash.value = 0;
-  inputs.down.value = 10000;
-  inputs.tradeValue.value = 0;
-  inputs.owedTrade.value = 0;
-  inputs.salesTax.value = 7;
-  inputs.fees.value = 2000;
-  inputs.currencyTop.value = 'USD';
-  calculate();
-}
-
-/* Wire up UI */
-window.addEventListener('load', ()=>{
-  createCharts();
-  $('calc').addEventListener('click', calculate);
-  $('reset').addEventListener('click', resetForm);
-  $('printBtn').addEventListener('click', ()=>window.print());
-  // initial draw
-  resetForm();
-
-  // Improve chart responsiveness within iframe: redraw on resize
-  let resizeTimer=null;
-  window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ if(amortChart) amortChart.resize(); if(donutChart) donutChart.resize(); },150); });
+/* event handlers */
+calcBtn.addEventListener('click', calculateAndRender);
+resetBtn.addEventListener('click', ()=>{
+  amountEl.value = 50000; monthsEl.value = 60; rateEl.value = 5; cashEl.value = 0;
+  downEl.value = 10000; tradeEl.value = 0; owedEl.value = 0; salesTaxEl.value = 7; feesEl.value = 2000;
+  calculateAndRender();
 });
+printBtn.addEventListener('click', ()=>{
+  window.print();
+});
+csvBtn.addEventListener('click', downloadCSV);
+
+/* tabs */
+document.getElementById('tabAnnual').addEventListener('click', ()=>{
+  document.getElementById('tabAnnual').classList.add('active');
+  document.getElementById('tabMonthly').classList.remove('active');
+  // rebuild schedule
+  const {schedule} = buildSchedule();
+  renderAnnual(schedule, currencyEl.value);
+});
+document.getElementById('tabMonthly').addEventListener('click', ()=>{
+  document.getElementById('tabMonthly').classList.add('active');
+  document.getElementById('tabAnnual').classList.remove('active');
+  const {schedule} = buildSchedule();
+  renderMonthly(schedule, currencyEl.value);
+});
+
+/* currency change refresh formatting for outputs */
+currencyEl.addEventListener('change', calculateAndRender);
+
+/* auto-run once */
+window.addEventListener('load', calculateAndRender);
 </script>
 </body>
 </html>
