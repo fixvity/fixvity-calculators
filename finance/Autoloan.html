@@ -24,11 +24,11 @@
   a{color:var(--accent);text-decoration:none}
 
   /* container */
-  .wrap{max-width:var(--container-max);margin:22px auto;padding:18px}
+  .wrap{max-width:var(--container-max);margin:22px auto;padding:18px;overflow-x:hidden;}
   header h1{margin:0;font-size:36px;color:var(--accent)}
   header p.lead{margin:8px 0 18px;color:var(--muted);font-size:16px}
 
-  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px;overflow:hidden}
 
   /* grid layout: form left, results right on wide screens */
   .grid{display:grid;gap:18px;grid-template-columns: 1fr 430px;}
@@ -36,7 +36,7 @@
 
   /* form controls */
   .form-row{display:flex;gap:12px}
-  .col{flex:1}
+  .col{flex:1;min-width:0}
   .form-group{margin-bottom:12px}
   label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
   input[type="text"], input[type="number"], select{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;background:#fff}
@@ -53,13 +53,16 @@
   .result-row .value{font-weight:700;font-size:18px}
 
   /* charts */
-  .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow)}
+  .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
   .chartBox{height:260px}
   .chartBox.tall{height:300px}
   @media (max-width:600px){
     .chartBox{height:220px}
     .chartBox.tall{height:260px}
   }
+
+  /* ensure canvases stay inside container */
+  canvas{max-width:100% !important; height:auto !important; display:block; }
 
   /* schedule table */
   .tableWrap{margin-top:10px;overflow:auto;background:transparent}
@@ -79,15 +82,9 @@
 
   /* NEW: mobile alignment fix */
   @media (max-width:600px){
-    .grid{
-      grid-template-columns:1fr;      /* form above, results below */
-    }
-    .form-row{
-      flex-direction:column;          /* stack fields vertically */
-    }
-    .form-row .col{
-      width:100%;
-    }
+    .grid{ grid-template-columns:1fr; }         /* form above, results below */
+    .form-row{ flex-direction:column; gap:10px; }/* stack fields vertically */
+    .form-row .col{ width:100%; min-width:0; }  /* prevent flex overflow */
   }
 
   /* print */
@@ -115,7 +112,7 @@
             <option value="USD">USD - $</option>
             <option value="EUR">EUR - €</option>
             <option value="CAD">CAD - $</option>
-                        <option value="GBP">GBP - £</option>
+            <option value="GBP">GBP - £</option>
             <option value="JPY">JPY - ¥</option>
             <option value="INR">INR - ₹</option>
           </select>
@@ -245,6 +242,7 @@
   </div>
 
 <script>
+/* currency formatting map */
 const currencyLocales = {
   USD: { locale: 'en-US', currency: 'USD' },
   EUR: { locale: 'de-DE', currency: 'EUR' },
@@ -258,12 +256,14 @@ function moneyFmt(amount, code='USD'){
   try {
     return new Intl.NumberFormat(cfg.locale, { style:'currency', currency: cfg.currency, maximumFractionDigits:2 }).format(amount);
   } catch(e){
-    return amount.toFixed(2);
+    return Number(amount).toFixed(2);
   }
 }
 
+/* short DOM helper */
 const $ = id => document.getElementById(id);
 
+/* inputs object for easy reference */
 const inputs = {
   price: $('price'),
   term: $('term'),
@@ -281,35 +281,34 @@ const inputs = {
   csvBtn: $('csv')
 };
 
-let donutChart=null, amortChart=null;
+let donutChart = null;
+let amortChart = null;
+
+/* create charts */
 function createCharts(){
-  const donutCtx = document.getElementById('donut').getContext('2d');
-  donutChart = new Chart(donutCtx,{
-    type:'doughnut',
-    data:{ labels:['Principal','Interest'], datasets:[{data:[1,1], backgroundColor:['#1f77b4','#7ac142']} ]},
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{position:'right'}}
-    }
+  const donutCtx = $('donut').getContext('2d');
+  donutChart = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: { labels: ['Principal','Interest'], datasets: [{ data: [1,1], backgroundColor: ['#1f77b4','#7ac142'] }]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}}}
   });
 
-  const amortCtx = document.getElementById('amort').getContext('2d');
-  amortChart = new Chart(amortCtx,{
+  const amortCtx = $('amort').getContext('2d');
+  amortChart = new Chart(amortCtx, {
     type:'line',
-        data:{
+    data:{
       labels:[],
       datasets:[
-        {label:'Balance',data:[],borderColor:'#1f77b4',fill:false,pointRadius:3},
-        {label:'Interest',data:[],borderColor:'#7ac142',fill:false,pointRadius:2},
-        {label:'Payment',data:[],borderColor:'#d44',fill:false,pointRadius:2}
+        {label:'Balance', data:[], borderColor:'#1f77b4', fill:false, pointRadius:3},
+        {label:'Interest', data:[], borderColor:'#7ac142', fill:false, pointRadius:2},
+        {label:'Payment', data:[], borderColor:'#d44', fill:false, pointRadius:2}
       ]
     },
     options:{
       responsive:true,
       maintainAspectRatio:false,
       scales:{
-        x:{ title:{display:true,text:'Month'} },
+        x:{ title:{display:true, text:'Month'} },
         y:{ title:{display:false} }
       },
       plugins:{legend:{position:'top'}}
@@ -317,7 +316,10 @@ function createCharts(){
   });
 }
 
-function calculate(){
+/* main calculate function */
+function calculate(e){
+  if(e && e.preventDefault) e.preventDefault();
+
   const currency = inputs.currencyTop.value || 'USD';
   const price = Number(inputs.price.value) || 0;
   const term = Math.max(1, parseInt(inputs.term.value || 0));
@@ -330,48 +332,53 @@ function calculate(){
   const salesTax = Number(inputs.salesTax.value) || 0;
   const fees = Number(inputs.fees.value) || 0;
 
+  // taxable base and loan amount
   const taxableBase = Math.max(0, price - cash - down - trade + owedTrade);
   const salesTaxAmount = taxableBase * (salesTax/100);
   const loanAmount = taxableBase + salesTaxAmount + fees;
 
+  // monthly payment
   let monthlyPayment = 0;
-  if(monthlyRate === 0){
+  if (monthlyRate === 0) {
     monthlyPayment = loanAmount / term;
   } else {
     monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1+monthlyRate, -term)));
   }
 
+  // build month schedule
   const schedule = [];
   let balance = loanAmount;
   let totalInterest = 0;
-  for(let m=1;m<=term;m++){
+  for (let m=1; m<=term; m++){
     const interest = balance * monthlyRate;
     const principal = Math.min(balance, monthlyPayment - interest);
     const payment = interest + principal;
     balance = Math.max(0, balance - principal);
     totalInterest += interest;
-    schedule.push({month:m, payment, principal, interest, balance});
+    schedule.push({ month: m, payment, principal, interest, balance });
   }
 
+  // annual summary
   const annual = {};
   schedule.forEach(r=>{
     const y = Math.ceil(r.month/12);
-    if(!annual[y]) annual[y] = {interest:0, principal:0, ending:0};
+    if(!annual[y]) annual[y] = { interest:0, principal:0, ending:0 };
     annual[y].interest += r.interest;
     annual[y].principal += r.principal;
     annual[y].ending = r.balance;
   });
 
-  document.getElementById('vehiclePriceVal').textContent = moneyFmt(price, currency);
-  document.getElementById('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
-  document.getElementById('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
+  // update UI values
+  $('vehiclePriceVal').textContent = moneyFmt(price, currency);
+  $('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
+  $('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
 
-  if(donutChart){
+  // update charts
+  if (donutChart){
     donutChart.data.datasets[0].data = [loanAmount, totalInterest];
     donutChart.update();
   }
-
-  if(amortChart){
+  if (amortChart){
     amortChart.data.labels = schedule.map(r=>String(r.month));
     amortChart.data.datasets[0].data = schedule.map(r=>r.balance);
     amortChart.data.datasets[1].data = schedule.map(r=>r.interest);
@@ -379,17 +386,22 @@ function calculate(){
     amortChart.update();
   }
 
+  // render schedule tables
   buildSchedule(schedule, annual, currency);
 }
 
+/* build HTML schedule tables and attach toggles + CSV handler */
 function buildSchedule(monthly, annual, currency){
-  const wrap = document.getElementById('scheduleWrap');
+  const wrap = $('scheduleWrap');
+
+  // annual table html
   let annHtml = '<div id="annualTable"><table><thead><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Ending Balance</th></tr></thead><tbody>';
   Object.keys(annual).sort((a,b)=>a-b).forEach(y=>{
     annHtml += `<tr><td>${y}</td><td>${moneyFmt(annual[y].interest,currency)}</td><td>${moneyFmt(annual[y].principal,currency)}</td><td>${moneyFmt(annual[y].ending,currency)}</td></tr>`;
   });
   annHtml += '</tbody></table></div>';
 
+  // monthly table html
   let monHtml = '<div id="monthlyTable" style="display:none"><table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></tr></thead><tbody>';
   monthly.forEach(r=>{
     monHtml += `<tr><td>${r.month}</td><td>${moneyFmt(r.payment,currency)}</td><td>${moneyFmt(r.principal,currency)}</td><td>${moneyFmt(r.interest,currency)}</td><td>${moneyFmt(r.balance,currency)}</td></tr>`;
@@ -398,22 +410,24 @@ function buildSchedule(monthly, annual, currency){
 
   wrap.innerHTML = annHtml + monHtml;
 
-  const btnA = document.getElementById('btnAnnual');
-  const btnM = document.getElementById('btnMonthly');
+  // toggle buttons
+  const btnA = $('btnAnnual');
+  const btnM = $('btnMonthly');
   btnA.classList.add('active'); btnM.classList.remove('active');
-  btnA.onclick = ()=>{ 
-    document.getElementById('annualTable').style.display='block'; 
-    document.getElementById('monthlyTable').style.display='none'; 
-    btnA.classList.add('active'); btnM.classList.remove('active'); 
+
+  btnA.onclick = () => {
+    $('annualTable').style.display = 'block';
+    $('monthlyTable').style.display = 'none';
+    btnA.classList.add('active'); btnM.classList.remove('active');
   };
-  btnM.onclick = ()=>{ 
-    document.getElementById('annualTable').style.display='none'; 
-    document.getElementById('monthlyTable').style.display='block'; 
-    btnM.classList.add('active'); btnA.classList.remove('active'); 
+  btnM.onclick = () => {
+    $('annualTable').style.display = 'none';
+    $('monthlyTable').style.display = 'block';
+    btnM.classList.add('active'); btnA.classList.remove('active');
   };
 
-  document.getElementById('csv').
-     document.getElementById('csv').onclick = ()=> {
+  // single CSV handler (safe, working)
+  inputs.csvBtn.onclick = () => {
     const rows = [['Month','Payment','Principal','Interest','EndingBalance']];
     monthly.forEach(r => rows.push([
       r.month,
@@ -422,9 +436,8 @@ function buildSchedule(monthly, annual, currency){
       r.interest.toFixed(2),
       r.balance.toFixed(2)
     ]));
-    const csv = rows.map(r => r.join(',')).join('
-');
-    const blob = new Blob([csv],{type:'text/csv'});
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -436,7 +449,9 @@ function buildSchedule(monthly, annual, currency){
   };
 }
 
-function resetForm(){
+/* reset defaults */
+function resetForm(e){
+  if(e && e.preventDefault) e.preventDefault();
   inputs.price.value = 50000;
   inputs.term.value = 60;
   inputs.rate.value = 5;
@@ -450,22 +465,28 @@ function resetForm(){
   calculate();
 }
 
+/* init on load */
 window.addEventListener('load', ()=>{
   createCharts();
-  document.getElementById('calc').addEventListener('click', calculate);
-  document.getElementById('reset').addEventListener('click', resetForm);
-  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
+
+  // single wiring (no duplicates)
+  inputs.calcBtn.addEventListener('click', calculate);
+  inputs.resetBtn.addEventListener('click', resetForm);
+  inputs.printBtn.addEventListener('click', ()=>window.print());
+
+  // initial render
   resetForm();
 
-  let resizeTimer=null;
-  window.addEventListener('resize', ()=>{
+  // safe resize handler (correct donut resize)
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer=setTimeout(()=>{
-      if(amortChart) amortChart.resize();
-      if(donutChart) amortChart.resize();
-    },150);
+    resizeTimer = setTimeout(() => {
+      if (amortChart) amortChart.resize();
+      if (donutChart) donutChart.resize();
+    }, 150);
   });
 });
 </script>
 </body>
-</html> 
+</html>
