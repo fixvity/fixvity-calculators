@@ -52,9 +52,9 @@
   .result-row h3{margin:0;color:var(--accent);font-size:16px}
   .result-row .value{font-weight:700;font-size:18px}
 
-  /* charts: give containers explicit height so Chart.js can fill */
+  /* charts */
   .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow)}
-  .chartBox{height:260px}            /* default chart height (desktop & tablet) */
+  .chartBox{height:260px}
   .chartBox.tall{height:300px}
   @media (max-width:600px){
     .chartBox{height:220px}
@@ -70,11 +70,24 @@
   .tabBtn{padding:10px 14px;border-radius:8px;border:1px solid #dfe6ee;background:#f7fbff;cursor:pointer}
   .tabBtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  /* responsive tweaks: single-column stacking on tiny screens */
+  /* responsive tweaks: tiny screens */
   @media (max-width:480px){
     header h1{font-size:28px}
     input[type="number"], input[type="text"]{font-size:15px;padding:10px}
     .chartBox{height:200px}
+  }
+
+  /* NEW: mobile alignment fix */
+  @media (max-width:600px){
+    .grid{
+      grid-template-columns:1fr;      /* form above, results below */
+    }
+    .form-row{
+      flex-direction:column;          /* stack fields vertically */
+    }
+    .form-row .col{
+      width:100%;
+    }
   }
 
   /* print */
@@ -83,7 +96,6 @@
     body{background:#fff}
     .wrap{max-width:100%;padding:0}
   }
-
 </style>
 </head>
 <body>
@@ -96,7 +108,6 @@
 
     <!-- main card: currency top + form + results -->
     <div class="card">
-      <!-- currency moved to top as requested -->
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
         <div style="flex:1;min-width:220px">
           <label for="currencyTop">Currency & Format</label>
@@ -104,7 +115,7 @@
             <option value="USD">USD - $</option>
             <option value="EUR">EUR - €</option>
             <option value="CAD">CAD - $</option>
-            <option value="GBP">GBP - £</option>
+                        <option value="GBP">GBP - £</option>
             <option value="JPY">JPY - ¥</option>
             <option value="INR">INR - ₹</option>
           </select>
@@ -153,8 +164,6 @@
                 <label for="owedTrade">Amount Owed on Trade</label>
                 <input id="owedTrade" type="number" value="0" />
               </div>
-
-              <!-- removed "Your State (optional)" as requested -->
               <div class="col form-group" style="display:none"></div>
             </div>
 
@@ -171,11 +180,11 @@
 
             <div class="form-group">
               <label for="note">Notes</label>
-              <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <button class="btn" id="calc">Calculate</button>
-          <button class="btn alt" id="reset">Reset</button>
-          <button class="btn alt" id="printBtn">Print</button>
-          <button class="btn alt" id="csv">Download CSV</button>
+              <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button class="btn" id="calc">Calculate</button>
+                <button class="btn alt" id="reset">Reset</button>
+                <button class="btn alt" id="printBtn">Print</button>
+                <button class="btn alt" id="csv">Download CSV</button>
               </div>
               <div class="small">Tip: fees/tax are included in the loan calculation by default for consistent totals. Edit code to change this behavior.</div>
             </div>
@@ -236,12 +245,6 @@
   </div>
 
 <script>
-/* ----------------------
-  Helper formatting & config
-   - currency formatting per selected currency
-   - CONVERSION: currently display uses selected currency (no automatic conversion between the user's inputs),
-     but you can easily add conversion by applying conversionRates in the calculate function.
------------------------*/
 const currencyLocales = {
   USD: { locale: 'en-US', currency: 'USD' },
   EUR: { locale: 'de-DE', currency: 'EUR' },
@@ -259,11 +262,8 @@ function moneyFmt(amount, code='USD'){
   }
 }
 
-/* DOM helpers */
 const $ = id => document.getElementById(id);
-const get = selector => document.querySelector(selector);
 
-/* Inputs */
 const inputs = {
   price: $('price'),
   term: $('term'),
@@ -281,7 +281,6 @@ const inputs = {
   csvBtn: $('csv')
 };
 
-/* Charts */
 let donutChart=null, amortChart=null;
 function createCharts(){
   const donutCtx = document.getElementById('donut').getContext('2d');
@@ -298,11 +297,14 @@ function createCharts(){
   const amortCtx = document.getElementById('amort').getContext('2d');
   amortChart = new Chart(amortCtx,{
     type:'line',
-    data:{ labels:[], datasets:[
-      {label:'Balance',data:[],borderColor:'#1f77b4',fill:false,pointRadius:3},
-      {label:'Interest',data:[],borderColor:'#7ac142',fill:false,pointRadius:2},
-      {label:'Payment',data:[],borderColor:'#d44',fill:false,pointRadius:2}
-    ]},
+        data:{
+      labels:[],
+      datasets:[
+        {label:'Balance',data:[],borderColor:'#1f77b4',fill:false,pointRadius:3},
+        {label:'Interest',data:[],borderColor:'#7ac142',fill:false,pointRadius:2},
+        {label:'Payment',data:[],borderColor:'#d44',fill:false,pointRadius:2}
+      ]
+    },
     options:{
       responsive:true,
       maintainAspectRatio:false,
@@ -315,7 +317,6 @@ function createCharts(){
   });
 }
 
-/* Calculation core (amortization) */
 function calculate(){
   const currency = inputs.currencyTop.value || 'USD';
   const price = Number(inputs.price.value) || 0;
@@ -329,13 +330,10 @@ function calculate(){
   const salesTax = Number(inputs.salesTax.value) || 0;
   const fees = Number(inputs.fees.value) || 0;
 
-  // taxable base (user-entered currency)
   const taxableBase = Math.max(0, price - cash - down - trade + owedTrade);
   const salesTaxAmount = taxableBase * (salesTax/100);
-  // include fees and taxes into loan (as agreed earlier)
   const loanAmount = taxableBase + salesTaxAmount + fees;
 
-  // monthly payment formula
   let monthlyPayment = 0;
   if(monthlyRate === 0){
     monthlyPayment = loanAmount / term;
@@ -343,7 +341,6 @@ function calculate(){
     monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1+monthlyRate, -term)));
   }
 
-  // build amortization schedule
   const schedule = [];
   let balance = loanAmount;
   let totalInterest = 0;
@@ -356,7 +353,6 @@ function calculate(){
     schedule.push({month:m, payment, principal, interest, balance});
   }
 
-  // annual aggregation
   const annual = {};
   schedule.forEach(r=>{
     const y = Math.ceil(r.month/12);
@@ -366,18 +362,15 @@ function calculate(){
     annual[y].ending = r.balance;
   });
 
-  // update UI
-  $('vehiclePriceVal').textContent = moneyFmt(price, currency);
-  $('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
-  $('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
+  document.getElementById('vehiclePriceVal').textContent = moneyFmt(price, currency);
+  document.getElementById('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
+  document.getElementById('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
 
-  // donut chart
   if(donutChart){
     donutChart.data.datasets[0].data = [loanAmount, totalInterest];
     donutChart.update();
   }
 
-  // amort chart
   if(amortChart){
     amortChart.data.labels = schedule.map(r=>String(r.month));
     amortChart.data.datasets[0].data = schedule.map(r=>r.balance);
@@ -386,13 +379,11 @@ function calculate(){
     amortChart.update();
   }
 
-  // schedule tables
   buildSchedule(schedule, annual, currency);
 }
 
-/* Build schedules and attach CSV download */
 function buildSchedule(monthly, annual, currency){
-  const wrap = $('scheduleWrap');
+  const wrap = document.getElementById('scheduleWrap');
   let annHtml = '<div id="annualTable"><table><thead><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Ending Balance</th></tr></thead><tbody>';
   Object.keys(annual).sort((a,b)=>a-b).forEach(y=>{
     annHtml += `<tr><td>${y}</td><td>${moneyFmt(annual[y].interest,currency)}</td><td>${moneyFmt(annual[y].principal,currency)}</td><td>${moneyFmt(annual[y].ending,currency)}</td></tr>`;
@@ -407,24 +398,44 @@ function buildSchedule(monthly, annual, currency){
 
   wrap.innerHTML = annHtml + monHtml;
 
-  // toggles
-  const btnA = $('btnAnnual'), btnM = $('btnMonthly');
+  const btnA = document.getElementById('btnAnnual');
+  const btnM = document.getElementById('btnMonthly');
   btnA.classList.add('active'); btnM.classList.remove('active');
-  btnA.onclick = ()=>{ $('annualTable').style.display='block'; $('monthlyTable').style.display='none'; btnA.classList.add('active'); btnM.classList.remove('active'); };
-  btnM.onclick = ()=>{ $('annualTable').style.display='none'; $('monthlyTable').style.display='block'; btnM.classList.add('active'); btnA.classList.remove('active'); };
+  btnA.onclick = ()=>{ 
+    document.getElementById('annualTable').style.display='block'; 
+    document.getElementById('monthlyTable').style.display='none'; 
+    btnA.classList.add('active'); btnM.classList.remove('active'); 
+  };
+  btnM.onclick = ()=>{ 
+    document.getElementById('annualTable').style.display='none'; 
+    document.getElementById('monthlyTable').style.display='block'; 
+    btnM.classList.add('active'); btnA.classList.remove('active'); 
+  };
 
-  // CSV download
-  $('csv').onclick = ()=> {
+  document.getElementById('csv').
+     document.getElementById('csv').onclick = ()=> {
     const rows = [['Month','Payment','Principal','Interest','EndingBalance']];
-    monthly.forEach(r => rows.push([r.month, r.payment.toFixed(2), r.principal.toFixed(2), r.interest.toFixed(2), r.balance.toFixed(2)]));
-    const csv = rows.map(r => r.join(',')).join('\n');
+    monthly.forEach(r => rows.push([
+      r.month,
+      r.payment.toFixed(2),
+      r.principal.toFixed(2),
+      r.interest.toFixed(2),
+      r.balance.toFixed(2)
+    ]));
+    const csv = rows.map(r => r.join(',')).join('
+');
     const blob = new Blob([csv],{type:'text/csv'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'amortization_monthly.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'amortization_monthly.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 }
 
-/* Reset */
 function resetForm(){
   inputs.price.value = 50000;
   inputs.term.value = 60;
@@ -439,19 +450,22 @@ function resetForm(){
   calculate();
 }
 
-/* Wire up UI */
 window.addEventListener('load', ()=>{
   createCharts();
-  $('calc').addEventListener('click', calculate);
-  $('reset').addEventListener('click', resetForm);
-  $('printBtn').addEventListener('click', ()=>window.print());
-  // initial draw
+  document.getElementById('calc').addEventListener('click', calculate);
+  document.getElementById('reset').addEventListener('click', resetForm);
+  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
   resetForm();
 
-  // Improve chart responsiveness within iframe: redraw on resize
   let resizeTimer=null;
-  window.addEventListener('resize', ()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(()=>{ if(amortChart) amortChart.resize(); if(donutChart) donutChart.resize(); },150); });
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(()=>{
+      if(amortChart) amortChart.resize();
+      if(donutChart) amortChart.resize();
+    },150);
+  });
 });
 </script>
 </body>
-</html>
+</html> 
