@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scientific Calculator — Mobile First</title>
+<style>
+  :root{
+    --bg: #f6fbfd;
+    --card: #fff;
+    --accent: #1f6fb6;
+    --muted: #6b7280;
+    --btn: #eef6fb;
+    --radius: 12px;
+    --shadow: 0 8px 24px rgba(10,20,30,0.06);
+    --font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:var(--font-sans);background:var(--bg);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:14px auto;padding:12px}
+  header{margin-bottom:8px}
+  header h1{margin:0;color:var(--accent);font-size:26px}
+  header p{margin:6px 0 12px;color:var(--muted);font-size:13px}
+  .card{background:var(--card);border-radius:var(--radius);padding:12px;box-shadow:var(--shadow);}
+
+  /* display */
+  .display{background:#fefefe;padding:10px;border-radius:10px;border:1px solid #f1f5f8;min-height:72px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+  .expr{color:#333;font-size:16px;min-height:20px;word-break:break-all}
+  .result{color:var(--accent);font-weight:700;font-size:22px}
+
+  /* layout */
+  .calcGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+  .btn{padding:14px;border-radius:10px;border:0;font-size:16px;background:var(--btn);cursor:pointer;box-shadow:none}
+  .btn.op{background:#fff;border:1px solid #e6eff6}
+  .btn.primary{background:var(--accent);color:#fff;font-weight:700}
+  .btn.wide{grid-column:span 2}
+  .btn.tall{grid-row:span 2}
+  .small{font-size:13px;color:var(--muted)}
+
+  .topRow{display:flex;gap:10px;align-items:center;margin:10px 0}
+  .toggle{display:flex;gap:8px;align-items:center}
+  .chip{padding:6px 10px;border-radius:8px;background:#f1f8fb;border:1px solid #e2f0fa;color:var(--accent);font-weight:600}
+
+  /* responsive */
+  @media (min-width:800px){
+    .wrap{max-width:900px;padding:18px}
+    header h1{font-size:32px}
+    .calcGrid{gap:12px}
+    .btn{padding:16px;font-size:18px}
+    .display{min-height:90px}
+  }
+  @media (max-width:420px){
+    .calcGrid{grid-template-columns:repeat(4,1fr);gap:8px}
+    .btn{padding:12px;font-size:15px}
+    .result{font-size:20px}
+  }
+
+  /* keyboard focus */
+  .btn:focus{outline:3px solid rgba(31,111,182,0.15)}
+  input.hidden{position:absolute;left:-9999px;opacity:0}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Scientific Calculator</h1>
+      <p>Mobile-first responsive scientific calculator. Paste into Elementor HTML widget or use on GitHub Pages.</p>
+    </header>
+
+    <div class="card" role="application" aria-label="Scientific calculator">
+      <div class="display" aria-live="polite">
+        <div class="small">Expression</div>
+        <div id="expr" class="expr">0</div>
+        <div id="res" class="result" aria-live="polite">0</div>
+      </div>
+
+      <div class="topRow" style="margin-top:12px">
+        <div class="toggle" style="gap:8px">
+          <label class="small" for="degRad">Mode</label>
+          <select id="degRad" aria-label="Degrees or Radians">
+            <option value="deg">DEG</option>
+            <option value="rad">RAD</option>
+          </select>
+        </div>
+        <div style="flex:1"></div>
+        <div class="chip" id="memoryChip" title="Memory">M: 0</div>
+      </div>
+
+      <!-- calculator buttons grid -->
+      <div class="calcGrid" id="grid">
+        <!-- row 1 -->
+        <button class="btn op" data-value="(" aria-label="open parenthesis">(</button>
+        <button class="btn op" data-value=")" aria-label="close parenthesis">)</button>
+        <button class="btn op" data-action="back" title="Backspace">⌫</button>
+        <button class="btn op" data-action="clear" title="Clear">C</button>
+
+        <!-- row 2 -->
+        <button class="btn" data-fn="sin">sin</button>
+        <button class="btn" data-fn="cos">cos</button>
+        <button class="btn" data-fn="tan">tan</button>
+        <button class="btn op" data-value="^">^</button>
+
+        <!-- row 3 -->
+        <button class="btn" data-fn="asin">asin</button>
+        <button class="btn" data-fn="acos">acos</button>
+        <button class="btn" data-fn="atan">atan</button>
+        <button class="btn op" data-value="%">%</button>
+
+        <!-- row 4 -->
+        <button class="btn" data-fn="log">log</button>
+        <button class="btn" data-fn="ln">ln</button>
+        <button class="btn" data-fn="sqrt">√</button>
+        <button class="btn op" data-value="/">÷</button>
+
+        <!-- row 5 -->
+        <button class="btn" data-value="7">7</button>
+        <button class="btn" data-value="8">8</button>
+        <button class="btn" data-value="9">9</button>
+        <button class="btn op" data-value="*">×</button>
+
+        <!-- row 6 -->
+        <button class="btn" data-value="4">4</button>
+        <button class="btn" data-value="5">5</button>
+        <button class="btn" data-value="6">6</button>
+        <button class="btn op" data-value="-">−</button>
+
+        <!-- row 7 -->
+        <button class="btn" data-value="1">1</button>
+        <button class="btn" data-value="2">2</button>
+        <button class="btn" data-value="3">3</button>
+        <button class="btn op" data-value="+">+</button>
+
+        <!-- row 8 -->
+        <button class="btn" data-value="0">0</button>
+        <button class="btn" data-value=".">.</button>
+        <button class="btn" data-fn="pi">π</button>
+        <button class="btn primary wide" data-action="equals">=</button>
+
+        <!-- row 9 (extra functions) -->
+        <button class="btn op" data-fn="exp">exp</button>
+        <button class="btn op" data-fn="pow">pow</button>
+        <button class="btn op" data-fn="fact">n!</button>
+        <button class="btn op" data-fn="e">e</button>
+
+        <!-- row 10 (memory and sign) -->
+        <button class="btn op" data-action="mPlus">M+</button>
+        <button class="btn op" data-action="mMinus">M-</button>
+        <button class="btn op" data-action="mr">MR</button>
+        <button class="btn op" data-action="mc">MC</button>
+      </div>
+
+      <!-- hidden input to capture keyboard actions on mobile when focused -->
+      <input class="hidden" id="kbd" aria-hidden="true" />
+    </div>
+  </div>
+
+<script>
+/*
+  Responsive scientific calculator
+  - Input building using data-value or data-fn or data-action attributes
+  - Expression sanitized and converted to safe JS using Math and helper wrappers
+  - DEG/RAD toggle for trig functions
+  - Factorial "!" and percent "%" handling
+  - Memory operations
+  - Keyboard support
+*/
+
+(() => {
+  const exprEl = document.getElementById('expr');
+  const resEl = document.getElementById('res');
+  const degRad = document.getElementById('degRad');
+  const memoryChip = document.getElementById('memoryChip');
+  const grid = document.getElementById('grid');
+  const kbd = document.getElementById('kbd');
+
+  let expression = '';
+  let memory = 0;
+  let lastAnswer = 0;
+
+  function updateDisplay(){
+    exprEl.textContent = expression || '0';
+  }
+  function setResult(v){
+    resEl.textContent = typeof v === 'number' && isFinite(v) ? formatNumber(v) : String(v);
+  }
+  function formatNumber(n){
+    // short formatting for very big/small numbers
+    if (!isFinite(n)) return String(n);
+    if (Math.abs(n) >= 1e9 || (Math.abs(n) > 0 && Math.abs(n) < 1e-8)) return n.toExponential(6);
+    // show upto 10 significant digits
+    return Number.isInteger(n) ? n.toString() : parseFloat(n.toPrecision(12)).toString();
+  }
+
+  function pushToken(t){
+    // if expression is "0" and pushing digit replace
+    if(expression === '0' && /\d/.test(t)) expression = t;
+    else expression += t;
+    updateDisplay();
+  }
+
+  // events from buttons
+  grid.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('button');
+    if(!btn) return;
+    const val = btn.getAttribute('data-value');
+    const fn = btn.getAttribute('data-fn');
+    const action = btn.getAttribute('data-action');
+
+    if(val !== null){
+      pushToken(val);
+      return;
+    }
+    if(fn){
+      handleFunction(fn);
+      return;
+    }
+    if(action){
+      handleAction(action);
+      return;
+    }
+  });
+
+  function handleFunction(name){
+    name = name.toLowerCase();
+    if(name === 'pi') { pushToken('pi'); return; }
+    if(name === 'e'){ pushToken('e'); return; }
+    if(name === 'sqrt'){ pushToken('sqrt('); return; }
+    if(name === 'ln'){ pushToken('ln('); return; }
+    if(name === 'log'){ pushToken('log('); return; }
+    if(name === 'sin' || name === 'cos' || name === 'tan' || name === 'asin' || name === 'acos' || name === 'atan'){
+      pushToken(name + '(');
+      return;
+    }
+    if(name === 'exp'){ pushToken('exp('); return; }
+    if(name === 'pow'){ pushToken('pow('); return; } // user should supply pow(x,y)
+    if(name === 'fact'){ pushToken('!'); return; } // append factorial operator
+  }
+
+  function handleAction(action){
+    if(action === 'back'){
+      expression = expression.slice(0,-1);
+      updateDisplay();
+      return;
+    }
+    if(action === 'clear'){
+      expression = '';
+      setResult(0);
+      updateDisplay();
+      return;
+    }
+    if(action === 'equals'){
+      evaluateExpression();
+      return;
+    }
+    if(action === 'mPlus'){ handleMemory('m+'); return; }
+    if(action === 'mMinus'){ handleMemory('m-'); return; }
+    if(action === 'mr'){ handleMemory('mr'); return; }
+    if(action === 'mc'){ handleMemory('mc'); return; }
+  }
+
+  function handleMemory(cmd){
+    if(cmd === 'm+'){ const v = Number(lastAnswer) || 0; memory = memory + v; memoryChip.textContent = 'M: ' + formatNumber(memory); return; }
+    if(cmd === 'm-'){ const v = Number(lastAnswer) || 0; memory = memory - v; memoryChip.textContent = 'M: ' + formatNumber(memory); return; }
+    if(cmd === 'mr'){ expression += String(memory); updateDisplay(); return; }
+    if(cmd === 'mc'){ memory = 0; memoryChip.textContent = 'M: 0'; return; }
+  }
+
+  // keyboard events
+  window.addEventListener('keydown', (e) => {
+    const key = e.key;
+    if((/^[0-9+\-*/().^%]$/).test(key)){
+      e.preventDefault();
+      pushToken(key);
+      return;
+    }
+    if(key === 'Enter' || key === '='){ e.preventDefault(); evaluateExpression(); return; }
+    if(key === 'Backspace'){ e.preventDefault(); expression = expression.slice(0,-1); updateDisplay(); return; }
+    if(key === 'Escape'){ e.preventDefault(); expression = ''; updateDisplay(); setResult(0); return; }
+    if(key === 'p'){ /* optionally pi */ }
+  });
+
+  // helper math wrappers and safe eval
+  function factorial(n){
+    n = Math.floor(n);
+    if(n < 0) return NaN;
+    if(n === 0 || n === 1) return 1;
+    let r = 1;
+    for(let i=2;i<=n;i++) r *= i;
+    return r;
+  }
+
+  // trig wrappers that respect DEG/RAD toggle
+  function angleToRad(x){
+    return degRad.value === 'deg' ? x * Math.PI / 180 : x;
+  }
+  function _sin(x){ return Math.sin(angleToRad(x)); }
+  function _cos(x){ return Math.cos(angleToRad(x)); }
+  function _tan(x){ return Math.tan(angleToRad(x)); }
+  function _asin(x){ const v = Math.asin(x); return degRad.value === 'deg' ? v * 180/Math.PI : v; }
+  function _acos(x){ const v = Math.acos(x); return degRad.value === 'deg' ? v * 180/Math.PI : v; }
+  function _atan(x){ const v = Math.atan(x); return degRad.value === 'deg' ? v * 180/Math.PI : v; }
+
+  // Replace user-friendly tokens -> safe JS expression
+  // Rules:
+  //  - allow digits, parentheses, ., + - * / ^ % , letters for function names
+  //  - convert ^ -> **, percent number% -> (number/100)
+  //  - handle factorial (!) postfix by replacing with factorial(...) call
+  //  - map sin/cos/tan/asin/acos/atan -> wrapper _sin/_cos etc
+  //  - map ln -> Math.log, log -> Math.log10, sqrt -> Math.sqrt, exp -> Math.exp, pow(x,y)->Math.pow
+  function sanitizeAndConvert(input){
+    if(!input || !input.length) return '0';
+    let s = input.replace(/\s+/g, '');
+    // basic allowed chars check (digits, letters, operators, parentheses, dot, comma, exclamation)
+    if(!/^[0-9+\-*/^%().,!a-zA-Z]*$/.test(s)){
+      throw new Error('Invalid character in expression');
+    }
+
+    // replace ^ with **
+    s = s.replace(/\^/g, '**');
+
+    // replace percent: number% or )% -> (number/100)
+    // iterative replacement for occurrences like 50% or (1+2)% etc
+    s = s.replace(/([0-9.]+)%/g, '($1/100)');
+    // handle case like ... )% -> ( <expr> /100 )
+    s = s.replace(/\)\%/g, ')/100');
+
+    // factorial: replace trailing '!' after a number or parenthesis with factorial(...)
+    // repeat until no more '!' found
+    while(/\!/.test(s)){
+      // number! -> factorial(number)
+      if(/\d+\!/.test(s)){
+        s = s.replace(/(\d+(\.\d+)?)\!/g, 'factorial($1)');
+        continue;
+      }
+      // (...)! -> factorial(...)
+      if(/\([^\(\)]+\)\!/.test(s)){
+        s = s.replace(/\(([^\(\)]+)\)\!/g, 'factorial(($1))');
+        continue;
+      }
+      // function-call! like sin(30)! etc => factorial(func(...))
+      if(/[a-zA-Z0-9_\)\]]+\!/.test(s)){
+        s = s.replace(/([a-zA-Z0-9_\)\]]+)\!/g, 'factorial($1)');
+        continue;
+      }
+      break;
+    }
+
+    // map common functions to Math or wrappers
+    // map trig to wrappers that handle deg/rad
+    s = s.replace(/\bpi\b/gi, 'Math.PI');
+    s = s.replace(/\be\b/gi, 'Math.E');
+
+    // functions - map pow(x,y) -> Math.pow(x,y), pow might be used manually
+    s = s.replace(/\bpow\(/gi, 'Math.pow(');
+    s = s.replace(/\bsqrt\(/gi, 'Math.sqrt(');
+    s = s.replace(/\bln\(/gi, 'Math.log('); // natural log
+    // log10 as "log(" -> Math.log10 if available else use Math.log(x)/Math.LN10
+    s = s.replace(/\blog\(/gi, 'Math.log10 ? Math.log10(' : 'Math.log('); // we'll handle below if Math.log10 isn't available
+
+    // map exp(
+    s = s.replace(/\bexp\(/gi, 'Math.exp(');
+
+    // map trigs to wrappers: sin( -> _sin(
+    s = s.replace(/\b(sin|cos|tan)\(/gi, (m,p1)=> {
+      return '_' + p1 + '(';
+    });
+    s = s.replace(/\b(asin|acos|atan)\(/gi, (m,p1)=> {
+      return '_' + p1 + '(';
+    });
+
+    // ensure Math.log10 support: if expression contains Math.log10 placeholder we fixed above with conditional string
+    if(s.indexOf('Math.log10') === -1 && /math\.log10/.test(s.toLowerCase())){
+      // not needed
+    }
+
+    // final safety check: allowed tokens in resulting string
+    if(!/^[0-9+\-*/.%(),!*A-Za-z_\s\*]*$/.test(s)){
+      throw new Error('Expression contains unsupported tokens after conversion.');
+    }
+
+    return s;
+  }
+
+  function evaluateExpression(){
+    if(!expression || expression.trim() === '') return setResult(0);
+    try{
+      let safe = sanitizeAndConvert(expression);
+
+      // prepare code string with local helpers in scope
+      const code = `
+        (function(){
+          const factorial = ${factorial.toString()};
+          const _sin = ${_sin.toString()};
+          const _cos = ${_cos.toString()};
+          const _tan = ${_tan.toString()};
+          const _asin = ${_asin.toString()};
+          const _acos = ${_acos.toString()};
+          const _atan = ${_atan.toString()};
+          // provide Math.log10 if missing
+          if(!Math.log10) Math.log10 = function(x){ return Math.log(x)/Math.LN10; };
+          return (${safe});
+        })()
+      `;
+      // Evaluate in a new Function to limit scope (still JS eval-like but sanitized)
+      const fn = new Function(code);
+      const value = fn();
+      lastAnswer = value;
+      setResult(value);
+    }catch(err){
+      setResult('Error');
+      console.error('Eval error:', err);
+    }
+  }
+
+  // click ENTER on "=" button
+  // also support double tap of equals -> re-evaluate last expression etc.
+  // Hook deg/rad change to re-eval if there's an existing value so axis changes immediately
+  degRad.addEventListener('change', ()=> {
+    if(expression) evaluateExpression();
+  });
+
+  // keyboard support - focus hidden field on touch to show keyboard if needed
+  document.addEventListener('touchstart', ()=> { kbd.focus(); }, {passive:true});
+  kbd.addEventListener('input', (e) => {
+    const v = e.target.value;
+    if(v.length === 0) return;
+    // append typed chars (only safe ones)
+    const char = v.slice(-1);
+    if(/^[0-9+\-*/().^%]$/.test(char)) pushToken(char);
+    e.target.value = '';
+  });
+
+  // initial values
+  expression = '';
+  updateDisplay();
+  setResult(0);
+})();
+</script>
+</body>
+</html>
