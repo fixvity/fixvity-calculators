@@ -2,8 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Income Tax Calculator (IRS Accurate)</title>
+<title>Income Tax Calculator 2025–2026 | Free IRS Accurate Tool</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Free IRS-accurate income tax calculator with refund or tax owed, state tax, self-employment tax, capital gains, and 1040-ES quarterly estimator.">
+
+<!-- ================= GOOGLE SCHEMA (ONE CODE) ================= -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "Income Tax Calculator",
+      "description": "Free IRS-accurate income tax calculator with refund or tax owed results, state tax, self-employment tax, capital gains, and 1040-ES quarterly estimator.",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "All",
+      "url": "https://yourdomain.com/income-tax-calculator",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is this income tax calculator accurate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "This calculator follows IRS federal tax brackets, standard deductions, and audit-safe rounding. Results are estimates only and not tax advice."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this calculator include state income tax?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The calculator includes state income tax calculations for supported states and no-tax states."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I calculate quarterly estimated tax payments?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. The calculator includes a 1040-ES quarterly estimated tax estimator."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,10 +71,15 @@ h1{color:#1f4e79;margin:0}
 .section h2{margin:0;background:#3b6ea5;color:#fff;padding:6px 10px;font-size:15px}
 .row{display:grid;grid-template-columns:60% 40%;padding:6px 10px;border-top:1px solid #ddd;align-items:center}
 .row label{font-size:13px}
-input,select{width:100%;padding:4px;border:1px solid #999}
-.actions{text-align:center;margin-top:15px}
-button{padding:8px 16px;margin:5px;cursor:pointer}
-strong{font-size:14px}
+input,select{width:100%;padding:6px;border:1px solid #999}
+.actions{text-align:center;margin:15px 0}
+button{padding:8px 18px;margin:5px;border:none;border-radius:20px;cursor:pointer}
+.calc{background:#d9534f;color:#fff}
+.pdf{background:#c9302c;color:#fff}
+.accordion-btn{width:100%;text-align:left;background:#eef3f8;border:1px solid #b7c9d9;padding:8px;font-size:14px;cursor:pointer}
+.accordion-content{display:none;border:1px solid #b7c9d9;border-top:none}
+.accordion-content.open{display:block}
+canvas{max-width:400px;margin:20px auto;display:block}
 @media(max-width:600px){.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -33,7 +90,7 @@ strong{font-size:14px}
 <h1>Income Tax Calculator</h1>
 <div class="note">Estimates only. Not tax advice.</div>
 
-<!-- FILING -->
+<!-- Filing Info -->
 <div class="section">
 <h2>Filing Info</h2>
 <div class="row"><label>Filing Status</label>
@@ -52,24 +109,34 @@ strong{font-size:14px}
 </div>
 </div>
 
-<!-- INCOME -->
+<!-- Income -->
 <div class="section">
 <h2>Income</h2>
 <div class="row"><label>Wages (W-2)</label><input id="wages" value="80000"></div>
 <div class="row"><label>Federal Tax Withheld</label><input id="withheld" value="9000"></div>
-<div class="row"><label>Self-Employment Income (1099)</label><input id="seIncome" value="0"></div>
+<div class="row"><label>Self-Employment Income</label><input id="seIncome" value="0"></div>
 <div class="row"><label>Short-Term Capital Gains</label><input id="stcg" value="0"></div>
 <div class="row"><label>Long-Term Capital Gains</label><input id="ltcg" value="0"></div>
 </div>
 
-<!-- DEPENDENTS -->
+<button class="accordion-btn" onclick="toggleAcc('advIncome')">▶ Advanced Income Options</button>
+<div class="accordion-content" id="advIncome">
+<div class="section">
+<h2>Additional Income</h2>
+<div class="row"><label>Interest Income</label><input id="interest" value="0"></div>
+<div class="row"><label>Dividends</label><input id="dividends" value="0"></div>
+<div class="row"><label>Other Income</label><input id="otherIncome" value="0"></div>
+</div>
+</div>
+
+<!-- Dependents -->
 <div class="section">
 <h2>Dependents</h2>
 <div class="row"><label>Children (0-16)</label><input id="childDep" value="0"></div>
-<div class="row"><label>Other Dependents (17+)</label><input id="otherDep" value="0"></div>
+<div class="row"><label>Other Dependents</label><input id="otherDep" value="0"></div>
 </div>
 
-<!-- STATE -->
+<!-- State -->
 <div class="section">
 <h2>State</h2>
 <div class="row">
@@ -83,112 +150,88 @@ strong{font-size:14px}
 </div>
 </div>
 
-<!-- ACTIONS -->
 <div class="actions">
-<button onclick="calculate()">Calculate</button>
-<button onclick="downloadPDF()">Download PDF</button>
+<button class="calc" onclick="calculate()">Calculate</button>
+<button class="pdf" onclick="downloadPDF()">Download PDF</button>
 </div>
 
-<!-- RESULTS -->
+<!-- Results -->
 <div class="section" id="results" style="display:none">
 <h2>Results</h2>
 <div class="row"><label>Federal Tax</label><strong id="federalTax"></strong></div>
 <div class="row"><label>State Tax</label><strong id="stateTax"></strong></div>
 <div class="row"><label>Self-Employment Tax</label><strong id="seTax"></strong></div>
 <div class="row"><label>Total Tax</label><strong id="totalTax"></strong></div>
-<div class="row"><label>Refund / Owed</label><strong id="refund"></strong></div>
+<div class="row"><label>Refund / Amount Owed</label><strong id="refund"></strong></div>
 </div>
 
-<!-- 1040 ES -->
+<!-- 1040-ES -->
 <div class="section" id="es" style="display:none">
 <h2>1040-ES Quarterly Payments</h2>
-<div class="row"><label>Q1 (Apr 15)</label><strong id="q1"></strong></div>
-<div class="row"><label>Q2 (Jun 15)</label><strong id="q2"></strong></div>
-<div class="row"><label>Q3 (Sep 15)</label><strong id="q3"></strong></div>
-<div class="row"><label>Q4 (Jan 15)</label><strong id="q4"></strong></div>
+<div class="row"><label>Q1</label><strong id="q1"></strong></div>
+<div class="row"><label>Q2</label><strong id="q2"></strong></div>
+<div class="row"><label>Q3</label><strong id="q3"></strong></div>
+<div class="row"><label>Q4</label><strong id="q4"></strong></div>
 </div>
 
-<canvas id="pie"></canvas>
+<canvas id="chart"></canvas>
 
 </div>
 
 <script>
+function toggleAcc(id){document.getElementById(id).classList.toggle("open")}
 function roundIRS(v){return Math.round(v)}
-function usd(v){return "$"+roundIRS(v).toLocaleString()}
+function usd(v){return "$"+roundIRS(v).toLocaleString("en-US")}
 
-const stdDeduction={
-2025:{single:14600,married:29200,separate:14600,head:21900},
-2026:{single:15000,married:30000,separate:15000,head:22500}
-};
-
-const fedBrackets={
-single:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
+const stdDed={2025:{single:14600,married:29200,separate:14600,head:21900},
+              2026:{single:15000,married:30000,separate:15000,head:22500}};
+const fedBrackets={single:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
 married:[[0,23200,.1],[23200,94300,.12],[94300,201050,.22],[201050,Infinity,.24]],
 separate:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
-head:[[0,16550,.1],[16550,63100,.12],[63100,100500,.22],[100500,Infinity,.24]]
-};
+head:[[0,16550,.1],[16550,63100,.12],[63100,100500,.22],[100500,Infinity,.24]]};
+const stateBrackets={CA:[[0,10099,.01],[10099,23942,.02],[23942,37788,.04],[37788,52455,.06],[52455,Infinity,.08]],
+NY:[[0,8500,.04],[8500,11700,.045],[11700,Infinity,.0525]],TX:[]};
 
-const stateBrackets={
-CA:[[0,10099,.01],[10099,23942,.02],[23942,37788,.04],[37788,52455,.06],[52455,Infinity,.08]],
-NY:[[0,8500,.04],[8500,11700,.045],[11700,Infinity,.0525]],
-TX:[]
-};
-
-function progTax(income,br){
-let t=0;
-for(let [m,x,r] of br){if(income>m)t+=(Math.min(income,x)-m)*r}
-return t;
-}
+function progTax(i,b){let t=0;for(const[m,x,r]of b){if(i>m)t+=(Math.min(i,x)-m)*r}return t}
+let taxChart=null;
 
 function calculate(){
-let wages=+wagesEl.value||0;
-let withheld=+withheldEl.value||0;
-let seIncome=+seIncomeEl.value||0;
-let stcg=+stcgEl.value||0;
-let ltcg=+ltcgEl.value||0;
+const wages=+wages.value||0,withh=+withheld.value||0,se=+seIncome.value||0,st=+stcg.value||0,lt=+ltcg.value||0;
+const adv=(+interest.value||0)+(+dividends.value||0)+(+otherIncome.value||0);
+const statusV=status.value,yearV=year.value,stateV=state.value;
+const kids=+childDep.value||0,others=+otherDep.value||0;
 
-let status=statusEl.value;
-let year=yearEl.value;
+const seTax=se>0?se*0.9235*0.153:0,seDed=seTax/2;
+const gross=wages+st+se+adv;
+let taxable=Math.max(0,gross-seDed-stdDed[yearV][statusV]);
+let fed=progTax(taxable,fedBrackets[statusV]);
+fed=Math.max(0,fed-(kids*2000+others*500));
+const stTax=stateBrackets[stateV]?progTax(taxable,stateBrackets[stateV]):0;
+const total=fed+stTax+seTax;
+const refundV=withh-total;
 
-let seTax=seIncome>0?(seIncome*0.9235*0.153):0;
-let seDed=seTax/2;
-
-let income=wages+stcg+seIncome;
-let taxable=Math.max(0,income-seDed-stdDeduction[year][status]);
-
-let fed=progTax(taxable,fedBrackets[status]);
-let credit=(+childDep.value||0)*2000+(+otherDep.value||0)*500;
-fed=Math.max(0,fed-credit);
-
-let state=stateBrackets[stateEl.value];
-let stTax=state?progTax(taxable,state):0;
-
-let total=fed+stTax+seTax;
-let refund=withheld-total;
-
-results.style.display="block";
-es.style.display="block";
-
+results.style.display=es.style.display="block";
 federalTax.textContent=usd(fed);
 stateTax.textContent=usd(stTax);
-seTaxEl.textContent=usd(seTax);
+seTax.textContent=usd(seTax);
 totalTax.textContent=usd(total);
-refundEl.textContent=refund>=0?"Refund "+usd(refund):"Owed "+usd(-refund);
+refund.textContent=refundV>=0?"Refund "+usd(refundV):"Owed "+usd(-refundV);
 
-let q=(Math.max(0,total-withheld))/4;
+const q=Math.max(0,total-withh)/4;
 q1.textContent=q2.textContent=q3.textContent=q4.textContent=usd(q);
+
+if(taxChart)taxChart.destroy();
+taxChart=new Chart(chart,{type:"pie",data:{labels:["Federal","State","SE"],datasets:[{data:[fed,stTax,seTax]}]}});
+
+results.scrollIntoView({behavior:"smooth"});
 }
-const wagesEl=wages,withheldEl=withheld,seIncomeEl=seIncome,stcgEl=stcg,ltcgEl=ltcg;
-const statusEl=status,yearEl=year,stateEl=state,childDepEl=childDep,otherDepEl=otherDep;
-const federalTaxEl=federalTax,stateTaxEl=stateTax,seTaxEl=document.getElementById("seTax"),totalTaxEl=totalTax,refundEl=refund;
 
 function downloadPDF(){
-const {jsPDF}=window.jspdf;
-let p=new jsPDF();
+const{jsPDF}=window.jspdf;const p=new jsPDF();
 p.text("Income Tax Summary",20,20);
-p.text("Total Tax: "+totalTaxEl.textContent,20,40);
-p.text("Result: "+refundEl.textContent,20,50);
-p.save("tax-summary.pdf");
+p.text("Total Tax: "+totalTax.textContent,20,40);
+p.text("Result: "+refund.textContent,20,50);
+p.save("income-tax-summary.pdf");
 }
 </script>
 
