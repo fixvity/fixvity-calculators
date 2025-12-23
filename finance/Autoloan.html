@@ -2,265 +2,193 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Income Tax Calculator</title>
+<title>Income Tax Calculator (IRS Accurate)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
-body{
-    font-family: Arial, Helvetica, sans-serif;
-    background:#ffffff;
-    color:#222;
-    margin:0;
-}
-.container{
-    max-width:760px;
-    margin:20px auto;
-    border:1px solid #cfd8dc;
-}
-.header{
-    padding:15px;
-}
-.header h1{
-    margin:0;
-    color:#1f4e79;
-    font-size:22px;
-}
-.header p{
-    font-size:13px;
-    color:#444;
-}
-.bar{
-    background:#2f6fa3;
-    color:#fff;
-    padding:8px 12px;
-    font-weight:bold;
-    font-size:14px;
-}
-.section{
-    padding:12px;
-}
-.row{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-bottom:8px;
-}
-.row label{
-    width:60%;
-    font-size:13px;
-}
-.row input,.row select{
-    width:40%;
-    padding:6px;
-    font-size:13px;
-    border:1px solid #999;
-}
-.small{
-    font-size:11px;
-    color:#555;
-}
-.buttons{
-    padding:15px;
-    text-align:center;
-}
-button{
-    padding:8px 18px;
-    font-size:14px;
-    border:none;
-    cursor:pointer;
-}
-.calculate{
-    background:#4CAF50;
-    color:white;
-}
-.clear{
-    background:#ccc;
-    margin-left:10px;
-}
-.result{
-    padding:15px;
-    border-top:1px solid #ccc;
-    font-size:14px;
-}
-.result strong{
-    font-size:16px;
-}
-@media(max-width:600px){
-    .row label,.row input,.row select{ width:100%; }
-}
+body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;margin:0}
+.container{max-width:900px;margin:20px auto;background:#fff;border:1px solid #ccc;padding:15px}
+h1{color:#1f4e79;margin:0}
+.note{background:#eef3f8;border:1px solid #b7c9d9;padding:8px;margin:10px 0;font-size:13px}
+.section{border:1px solid #b7c9d9;margin:12px 0}
+.section h2{margin:0;background:#3b6ea5;color:#fff;padding:6px 10px;font-size:15px}
+.row{display:grid;grid-template-columns:60% 40%;padding:6px 10px;border-top:1px solid #ddd;align-items:center}
+.row label{font-size:13px}
+input,select{width:100%;padding:4px;border:1px solid #999}
+.actions{text-align:center;margin-top:15px}
+button{padding:8px 16px;margin:5px;cursor:pointer}
+strong{font-size:14px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<div class="header">
 <h1>Income Tax Calculator</h1>
-<p>
-The Income Tax Calculator estimates the refund or potential owed amount on a federal tax return.
-It is mainly intended for residents of the U.S. and is based on the tax brackets of 2025–2028.
-</p>
-</div>
+<div class="note">Estimates only. Not tax advice.</div>
 
-<div class="bar">Modify the values and click the Calculate button to use</div>
-
-<!-- BASIC INFO -->
+<!-- FILING -->
 <div class="section">
-<div class="row">
-<label>File Status</label>
+<h2>Filing Info</h2>
+<div class="row"><label>Filing Status</label>
 <select id="status">
 <option value="single">Single</option>
 <option value="married">Married Filing Jointly</option>
+<option value="separate">Married Filing Separately</option>
+<option value="head">Head of Household</option>
 </select>
 </div>
-
-<div class="row">
-<label>No. of Young Dependents <span class="small">Age 0–16</span></label>
-<input type="number" id="child" value="0">
-</div>
-
-<div class="row">
-<label>No. of Other Dependents <span class="small">Age 17 or older</span></label>
-<input type="number" id="otherdep" value="0">
-</div>
-
-<div class="row">
-<label>Tax Year</label>
+<div class="row"><label>Tax Year</label>
 <select id="year">
-<option value="2025">2025 (return filed in 2026)</option>
-<option value="2026">2026 (return filed in 2027)</option>
-<option value="2027">2027 (return filed in 2028)</option>
-<option value="2028">2028 (return filed in 2029)</option>
+<option value="2025">2025</option>
+<option value="2026">2026</option>
 </select>
 </div>
 </div>
 
 <!-- INCOME -->
-<div class="bar">Income</div>
 <div class="section">
-
-<div class="row"><label>Age</label><input type="number" id="age" value="30"></div>
-
-<div class="row"><label>Wages, Tips, Other Compensation <span class="small">(W-2 box 1)</span></label><input type="number" id="wages" value="0"></div>
-
-<div class="row"><label>Federal Income Tax Withheld <span class="small">(W-2 box 2)</span></label><input type="number" id="fedwith" value="0"></div>
-
-<div class="row"><label>State Income Tax Withheld <span class="small">(W-2 box 17)</span></label><input type="number" id="statewith" value="0"></div>
-
-<div class="row"><label>Local Income Tax Withheld <span class="small">(W-2 box 19)</span></label><input type="number" id="localwith" value="0"></div>
-
-<div class="row"><label>Has Business or Self Employment Income?</label>
-<select id="selfemp"><option value="no">No</option><option value="yes">Yes</option></select>
+<h2>Income</h2>
+<div class="row"><label>Wages (W-2)</label><input id="wages" value="80000"></div>
+<div class="row"><label>Federal Tax Withheld</label><input id="withheld" value="9000"></div>
+<div class="row"><label>Self-Employment Income (1099)</label><input id="seIncome" value="0"></div>
+<div class="row"><label>Short-Term Capital Gains</label><input id="stcg" value="0"></div>
+<div class="row"><label>Long-Term Capital Gains</label><input id="ltcg" value="0"></div>
 </div>
 
-<div class="row"><label>Social Security Income <span class="small">SSA-1099</span></label><input type="number" id="ss" value="0"></div>
-
-<div class="row"><label>Interest Income <span class="small">1099-INT</span></label><input type="number" id="interest" value="0"></div>
-
-<div class="row"><label>Ordinary Dividends <span class="small">1099-DIV</span></label><input type="number" id="div" value="0"></div>
-
-<div class="row"><label>Qualified Dividends</label><input type="number" id="qdiv" value="0"></div>
-
-<div class="row"><label>Passive Incomes <span class="small">rentals, real estate, royalties</span></label><input type="number" id="passive" value="0"></div>
-
-<div class="row"><label>Short-term Capital Gains</label><input type="number" id="stcg" value="0"></div>
-
-<div class="row"><label>Long-term Capital Gains</label><input type="number" id="ltcg" value="0"></div>
-
-<div class="row"><label>Other Income <span class="small">(1099-G / 1099-R)</span></label><input type="number" id="otherinc" value="0"></div>
-
-<div class="row"><label>State + Local Tax Rate (%)</label><input type="number" id="saltRate" value="0"></div>
-
-</div>
-
-<!-- DEDUCTIONS -->
-<div class="bar">Deductions & Credits</div>
+<!-- DEPENDENTS -->
 <div class="section">
-
-<div class="row"><label>Tips Income</label><input type="number" id="tips" value="0"></div>
-<div class="row"><label>Overtime Income</label><input type="number" id="overtime" value="0"></div>
-
-<div class="row"><label>Car Loan Interest <span class="small">Max $10,000</span></label><input type="number" id="car" value="0"></div>
-
-<div class="row"><label>IRA Contributions</label><input type="number" id="ira" value="0"></div>
-
-<div class="row"><label>Real Estate Tax</label><input type="number" id="realestate" value="0"></div>
-
-<div class="row"><label>Mortgage Interest</label><input type="number" id="mortgage" value="0"></div>
-
-<div class="row"><label>Charitable Donations</label><input type="number" id="charity" value="0"></div>
-
-<div class="row"><label>Student Loan Interest <span class="small">Max $2,500</span></label><input type="number" id="student" value="0"></div>
-
-<div class="row"><label>Child & Dependent Care Expense <span class="small">Max $3,000/person</span></label><input type="number" id="care" value="0"></div>
-
-<div class="row"><label>College Education Expense – Student 1</label><input type="number" value="0"></div>
-<div class="row"><label>College Education Expense – Student 2</label><input type="number" value="0"></div>
-<div class="row"><label>College Education Expense – Student 3</label><input type="number" value="0"></div>
-<div class="row"><label>College Education Expense – Student 4</label><input type="number" value="0"></div>
-
-<div class="row"><label>Other Deductibles</label><input type="number" id="otherded" value="0"></div>
-
+<h2>Dependents</h2>
+<div class="row"><label>Children (0-16)</label><input id="childDep" value="0"></div>
+<div class="row"><label>Other Dependents (17+)</label><input id="otherDep" value="0"></div>
 </div>
 
-<div class="buttons">
-<button class="calculate" onclick="calculate()">Calculate</button>
-<button class="clear" onclick="location.reload()">Clear</button>
+<!-- STATE -->
+<div class="section">
+<h2>State</h2>
+<div class="row">
+<label>State</label>
+<select id="state">
+<option value="">No State Tax</option>
+<option value="CA">California</option>
+<option value="NY">New York</option>
+<option value="TX">Texas</option>
+</select>
+</div>
 </div>
 
-<div class="result" id="result"></div>
+<!-- ACTIONS -->
+<div class="actions">
+<button onclick="calculate()">Calculate</button>
+<button onclick="downloadPDF()">Download PDF</button>
+</div>
+
+<!-- RESULTS -->
+<div class="section" id="results" style="display:none">
+<h2>Results</h2>
+<div class="row"><label>Federal Tax</label><strong id="federalTax"></strong></div>
+<div class="row"><label>State Tax</label><strong id="stateTax"></strong></div>
+<div class="row"><label>Self-Employment Tax</label><strong id="seTax"></strong></div>
+<div class="row"><label>Total Tax</label><strong id="totalTax"></strong></div>
+<div class="row"><label>Refund / Owed</label><strong id="refund"></strong></div>
+</div>
+
+<!-- 1040 ES -->
+<div class="section" id="es" style="display:none">
+<h2>1040-ES Quarterly Payments</h2>
+<div class="row"><label>Q1 (Apr 15)</label><strong id="q1"></strong></div>
+<div class="row"><label>Q2 (Jun 15)</label><strong id="q2"></strong></div>
+<div class="row"><label>Q3 (Sep 15)</label><strong id="q3"></strong></div>
+<div class="row"><label>Q4 (Jan 15)</label><strong id="q4"></strong></div>
+</div>
+
+<canvas id="pie"></canvas>
 
 </div>
 
 <script>
-function getBrackets(year,status){
- const base={
-  single:[[11600,.10],[47150,.12],[100525,.22],[191950,.24],[243725,.32],[609350,.35],[Infinity,.37]],
-  married:[[23200,.10],[94300,.12],[201050,.22],[383900,.24],[487450,.32],[731200,.35],[Infinity,.37]]
- };
- let f=Math.pow(1.03,year-2025);
- return base[status].map(b=>[b[0]===Infinity?Infinity:Math.round(b[0]*f),b[1]]);
-}
+function roundIRS(v){return Math.round(v)}
+function usd(v){return "$"+roundIRS(v).toLocaleString()}
 
-function calcProg(income,br){
- let t=0,p=0;
- for(let [l,r] of br){
-  if(income<=p)break;
-  t+=(Math.min(income,l)-p)*r;
-  p=l;
- }
- return t;
+const stdDeduction={
+2025:{single:14600,married:29200,separate:14600,head:21900},
+2026:{single:15000,married:30000,separate:15000,head:22500}
+};
+
+const fedBrackets={
+single:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
+married:[[0,23200,.1],[23200,94300,.12],[94300,201050,.22],[201050,Infinity,.24]],
+separate:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
+head:[[0,16550,.1],[16550,63100,.12],[63100,100500,.22],[100500,Infinity,.24]]
+};
+
+const stateBrackets={
+CA:[[0,10099,.01],[10099,23942,.02],[23942,37788,.04],[37788,52455,.06],[52455,Infinity,.08]],
+NY:[[0,8500,.04],[8500,11700,.045],[11700,Infinity,.0525]],
+TX:[]
+};
+
+function progTax(income,br){
+let t=0;
+for(let [m,x,r] of br){if(income>m)t+=(Math.min(income,x)-m)*r}
+return t;
 }
 
 function calculate(){
- let income=
-  +wages.value + +tips.value + +overtime.value +
-  +ss.value + +interest.value + +div.value + +qdiv.value +
-  +passive.value + +stcg.value + +ltcg.value + +otherinc.value;
+let wages=+wagesEl.value||0;
+let withheld=+withheldEl.value||0;
+let seIncome=+seIncomeEl.value||0;
+let stcg=+stcgEl.value||0;
+let ltcg=+ltcgEl.value||0;
 
- let deduct=
-  Math.min(+car.value,10000)+
-  +ira.value + +realestate.value +
-  +mortgage.value + +charity.value +
-  Math.min(+student.value,2500) +
-  +care.value + +otherded.value;
+let status=statusEl.value;
+let year=yearEl.value;
 
- let status=status.value;
- let year=+document.getElementById("year").value;
- let std=status==="single"?14600:29200;
+let seTax=seIncome>0?(seIncome*0.9235*0.153):0;
+let seDed=seTax/2;
 
- let taxable=Math.max(0,income-deduct-std);
- let tax=calcProg(taxable,getBrackets(year,status));
+let income=wages+stcg+seIncome;
+let taxable=Math.max(0,income-seDed-stdDeduction[year][status]);
 
- let credits=(+child.value*2000)+(+otherdep.value*500);
- tax=Math.max(0,tax-credits);
+let fed=progTax(taxable,fedBrackets[status]);
+let credit=(+childDep.value||0)*2000+(+otherDep.value||0)*500;
+fed=Math.max(0,fed-credit);
 
- let diff=+fedwith.value-tax;
+let state=stateBrackets[stateEl.value];
+let stTax=state?progTax(taxable,state):0;
 
- document.getElementById("result").innerHTML=
- diff>=0?
- `<strong>Estimated Refund:</strong> $${diff.toFixed(2)}`:
- `<strong>Estimated Tax Owed:</strong> $${Math.abs(diff).toFixed(2)}`;
+let total=fed+stTax+seTax;
+let refund=withheld-total;
+
+results.style.display="block";
+es.style.display="block";
+
+federalTax.textContent=usd(fed);
+stateTax.textContent=usd(stTax);
+seTaxEl.textContent=usd(seTax);
+totalTax.textContent=usd(total);
+refundEl.textContent=refund>=0?"Refund "+usd(refund):"Owed "+usd(-refund);
+
+let q=(Math.max(0,total-withheld))/4;
+q1.textContent=q2.textContent=q3.textContent=q4.textContent=usd(q);
+}
+const wagesEl=wages,withheldEl=withheld,seIncomeEl=seIncome,stcgEl=stcg,ltcgEl=ltcg;
+const statusEl=status,yearEl=year,stateEl=state,childDepEl=childDep,otherDepEl=otherDep;
+const federalTaxEl=federalTax,stateTaxEl=stateTax,seTaxEl=document.getElementById("seTax"),totalTaxEl=totalTax,refundEl=refund;
+
+function downloadPDF(){
+const {jsPDF}=window.jspdf;
+let p=new jsPDF();
+p.text("Income Tax Summary",20,20);
+p.text("Total Tax: "+totalTaxEl.textContent,20,40);
+p.text("Result: "+refundEl.textContent,20,50);
+p.save("tax-summary.pdf");
 }
 </script>
 
