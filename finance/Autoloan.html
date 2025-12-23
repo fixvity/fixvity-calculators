@@ -1,239 +1,492 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Income Tax Calculator 2025–2026 | Free IRS Accurate Tool</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Free IRS-accurate income tax calculator with refund or tax owed, state tax, self-employment tax, capital gains, and 1040-ES quarterly estimator.">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Auto Loan Calculator — Fixvity</title>
 
-<!-- ================= GOOGLE SCHEMA (ONE CODE) ================= -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebApplication",
-      "name": "Income Tax Calculator",
-      "description": "Free IRS-accurate income tax calculator with refund or tax owed results, state tax, self-employment tax, capital gains, and 1040-ES quarterly estimator.",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "All",
-      "url": "https://yourdomain.com/income-tax-calculator",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      }
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is this income tax calculator accurate?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "This calculator follows IRS federal tax brackets, standard deductions, and audit-safe rounding. Results are estimates only and not tax advice."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Does this calculator include state income tax?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The calculator includes state income tax calculations for supported states and no-tax states."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I calculate quarterly estimated tax payments?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. The calculator includes a 1040-ES quarterly estimated tax estimator."
-          }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-<!-- Chart.js -->
+<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- jsPDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Arial,Helvetica,sans-serif;background:#f2f2f2;margin:0}
-.container{max-width:900px;margin:20px auto;background:#fff;border:1px solid #ccc;padding:15px}
-h1{color:#1f4e79;margin:0}
-.note{background:#eef3f8;border:1px solid #b7c9d9;padding:8px;margin:10px 0;font-size:13px}
-.section{border:1px solid #b7c9d9;margin:12px 0}
-.section h2{margin:0;background:#3b6ea5;color:#fff;padding:6px 10px;font-size:15px}
-.row{display:grid;grid-template-columns:60% 40%;padding:6px 10px;border-top:1px solid #ddd;align-items:center}
-.row label{font-size:13px}
-input,select{width:100%;padding:6px;border:1px solid #999}
-.actions{text-align:center;margin:15px 0}
-button{padding:8px 18px;margin:5px;border:none;border-radius:20px;cursor:pointer}
-.calc{background:#d9534f;color:#fff}
-.pdf{background:#c9302c;color:#fff}
-.accordion-btn{width:100%;text-align:left;background:#eef3f8;border:1px solid #b7c9d9;padding:8px;font-size:14px;cursor:pointer}
-.accordion-content{display:none;border:1px solid #b7c9d9;border-top:none}
-.accordion-content.open{display:block}
-canvas{max-width:400px;margin:20px auto;display:block}
-@media(max-width:600px){.row{grid-template-columns:1fr}}
+  :root{
+    --bg:#f7fbfd;
+    --card:#ffffff;
+    --accent:#1f6fb6;
+    --muted:#6b7280;
+    --radius:12px;
+    --shadow: 0 8px 28px rgba(10,20,30,0.06);
+    --container-max:1100px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#111;background:var(--bg);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+
+  /* container */
+  .wrap{max-width:var(--container-max);margin:22px auto;padding:18px;overflow-x:hidden;}
+  header h1{margin:0;font-size:36px;color:var(--accent)}
+  header p.lead{margin:8px 0 18px;color:var(--muted);font-size:16px}
+
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px;overflow:hidden}
+
+  /* grid layout: form left, results right on wide screens */
+  .grid{display:grid;gap:18px;grid-template-columns: 1fr 430px;}
+  @media (max-width:1024px){ .grid{grid-template-columns:1fr;} }
+
+  /* form controls */
+  .form-row{display:flex;gap:12px}
+  .col{flex:1;min-width:0}
+  .form-group{margin-bottom:12px}
+  label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
+  input[type="text"], input[type="number"], select{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;font-size:16px;background:#fff}
+  .small{font-size:13px;color:var(--muted)}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .btn{display:inline-block;padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+  .btn.alt{background:#eef6fb;color:var(--accent);border:1px solid #dfeffb}
+
+  /* results area */
+  .results{display:flex;flex-direction:column;gap:14px}
+  .result-row{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:12px;border-radius:8px;border:1px solid #f1f5f9}
+  .result-row h3{margin:0;color:var(--accent);font-size:16px}
+  .result-row .value{font-weight:700;font-size:18px}
+
+  /* charts */
+  .chartWrap{background:var(--card);padding:12px;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+  .chartBox{height:260px}
+  .chartBox.tall{height:300px}
+  @media (max-width:600px){
+    .chartBox{height:220px}
+    .chartBox.tall{height:260px}
+  }
+
+  /* ensure canvases stay inside container */
+  canvas{max-width:100% !important; height:auto !important; display:block; }
+
+  /* schedule table */
+  .tableWrap{margin-top:10px;overflow:auto;background:transparent}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #eef2f7;text-align:left}
+  th{background:#2f6b9f;color:#fff}
+  .tableToggle{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .tabBtn{padding:10px 14px;border-radius:8px;border:1px solid #dfe6ee;background:#f7fbff;cursor:pointer}
+  .tabBtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* responsive tweaks: tiny screens */
+  @media (max-width:480px){
+    header h1{font-size:28px}
+    input[type="number"], input[type="text"]{font-size:15px;padding:10px}
+    .chartBox{height:200px}
+  }
+
+  /* NEW: mobile alignment fix */
+  @media (max-width:600px){
+    .grid{ grid-template-columns:1fr; }         /* form above, results below */
+    .form-row{ flex-direction:column; gap:10px; }/* stack fields vertically */
+    .form-row .col{ width:100%; min-width:0; }  /* prevent flex overflow */
+  }
+
+  /* print */
+  @media print{
+    .controls, label, .small, .tabBtn { display:none !important; }
+    body{background:#fff}
+    .wrap{max-width:100%;padding:0}
+  }
 </style>
 </head>
-
 <body>
-<div class="container">
+  <div class="wrap">
 
-<h1>Income Tax Calculator</h1>
-<div class="note">Estimates only. Not tax advice.</div>
+    <header>
+      <h1>Auto Loan Calculator</h1>
+      <p class="lead">Monthly payment, amortization schedule, charts, and printable results. Select currency and view annual or monthly breakdowns.</p>
+    </header>
 
-<!-- Filing Info -->
-<div class="section">
-<h2>Filing Info</h2>
-<div class="row"><label>Filing Status</label>
-<select id="status">
-<option value="single">Single</option>
-<option value="married">Married Filing Jointly</option>
-<option value="separate">Married Filing Separately</option>
-<option value="head">Head of Household</option>
-</select>
-</div>
-<div class="row"><label>Tax Year</label>
-<select id="year">
-<option value="2025">2025</option>
-<option value="2026">2026</option>
-</select>
-</div>
-</div>
+    <!-- main card: currency top + form + results -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+        <div style="flex:1;min-width:220px">
+          <label for="currencyTop">Currency & Format</label>
+          <select id="currencyTop" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8">
+            <option value="USD">USD - $</option>
+            <option value="EUR">EUR - €</option>
+            <option value="CAD">CAD - $</option>
+            <option value="GBP">GBP - £</option>
+            <option value="JPY">JPY - ¥</option>
+            <option value="INR">INR - ₹</option>
+          </select>
+          <div class="small" style="margin-top:6px">Exchange rates are example values — change in code if needed.</div>
+        </div>
+      </div>
 
-<!-- Income -->
-<div class="section">
-<h2>Income</h2>
-<div class="row"><label>Wages (W-2)</label><input id="wages" value="80000"></div>
-<div class="row"><label>Federal Tax Withheld</label><input id="withheld" value="9000"></div>
-<div class="row"><label>Self-Employment Income</label><input id="seIncome" value="0"></div>
-<div class="row"><label>Short-Term Capital Gains</label><input id="stcg" value="0"></div>
-<div class="row"><label>Long-Term Capital Gains</label><input id="ltcg" value="0"></div>
-</div>
+      <div class="grid">
+        <!-- LEFT: form -->
+        <div>
+          <form id="loanForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="price">Auto Price</label>
+              <input id="price" type="number" min="0" value="50000" />
+            </div>
 
-<button class="accordion-btn" onclick="toggleAcc('advIncome')">▶ Advanced Income Options</button>
-<div class="accordion-content" id="advIncome">
-<div class="section">
-<h2>Additional Income</h2>
-<div class="row"><label>Interest Income</label><input id="interest" value="0"></div>
-<div class="row"><label>Dividends</label><input id="dividends" value="0"></div>
-<div class="row"><label>Other Income</label><input id="otherIncome" value="0"></div>
-</div>
-</div>
+            <div class="form-row" style="margin-bottom:8px">
+              <div class="col form-group">
+                <label for="term">Loan Term (months)</label>
+                <input id="term" type="number" min="1" value="60" />
+              </div>
+              <div class="col form-group">
+                <label for="rate">Interest Rate (%)</label>
+                <input id="rate" type="number" step="0.001" value="5" min="0" />
+              </div>
+            </div>
 
-<!-- Dependents -->
-<div class="section">
-<h2>Dependents</h2>
-<div class="row"><label>Children (0-16)</label><input id="childDep" value="0"></div>
-<div class="row"><label>Other Dependents</label><input id="otherDep" value="0"></div>
-</div>
+            <div class="form-group">
+              <label for="cash">Cash incentives</label>
+              <input id="cash" type="number" value="0" />
+            </div>
 
-<!-- State -->
-<div class="section">
-<h2>State</h2>
-<div class="row">
-<label>State</label>
-<select id="state">
-<option value="">No State Tax</option>
-<option value="CA">California</option>
-<option value="NY">New York</option>
-<option value="TX">Texas</option>
-</select>
-</div>
-</div>
+            <div class="form-row">
+              <div class="col form-group">
+                <label for="down">Down Payment</label>
+                <input id="down" type="number" value="10000" />
+              </div>
+              <div class="col form-group">
+                <label for="tradeValue">Trade-in Value</label>
+                <input id="tradeValue" type="number" value="0" />
+              </div>
+            </div>
 
-<div class="actions">
-<button class="calc" onclick="calculate()">Calculate</button>
-<button class="pdf" onclick="downloadPDF()">Download PDF</button>
-</div>
+            <div class="form-row">
+              <div class="col form-group">
+                <label for="owedTrade">Amount Owed on Trade</label>
+                <input id="owedTrade" type="number" value="0" />
+              </div>
+              <div class="col form-group" style="display:none"></div>
+            </div>
 
-<!-- Results -->
-<div class="section" id="results" style="display:none">
-<h2>Results</h2>
-<div class="row"><label>Federal Tax</label><strong id="federalTax"></strong></div>
-<div class="row"><label>State Tax</label><strong id="stateTax"></strong></div>
-<div class="row"><label>Self-Employment Tax</label><strong id="seTax"></strong></div>
-<div class="row"><label>Total Tax</label><strong id="totalTax"></strong></div>
-<div class="row"><label>Refund / Amount Owed</label><strong id="refund"></strong></div>
-</div>
+            <div class="form-row">
+              <div class="col form-group">
+                <label for="salesTax">Sales Tax (%)</label>
+                <input id="salesTax" type="number" step="0.01" value="7" />
+              </div>
+              <div class="col form-group">
+                <label for="fees">Title / Registration / Fees ($)</label>
+                <input id="fees" type="number" value="2000" />
+              </div>
+            </div>
 
-<!-- 1040-ES -->
-<div class="section" id="es" style="display:none">
-<h2>1040-ES Quarterly Payments</h2>
-<div class="row"><label>Q1</label><strong id="q1"></strong></div>
-<div class="row"><label>Q2</label><strong id="q2"></strong></div>
-<div class="row"><label>Q3</label><strong id="q3"></strong></div>
-<div class="row"><label>Q4</label><strong id="q4"></strong></div>
-</div>
+            <div class="form-group">
+              <label for="note">Notes</label>
+              <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button class="btn" id="calc">Calculate</button>
+                <button class="btn alt" id="reset">Reset</button>
+                <button class="btn alt" id="printBtn">Print</button>
+                <button class="btn alt" id="csv">Download CSV</button>
+              </div>
+              <div class="small">Tip: fees/tax are included in the loan calculation by default for consistent totals. Edit code to change this behavior.</div>
+            </div>
+          </form>
+        </div>
 
-<canvas id="chart"></canvas>
+        <!-- RIGHT: results & charts -->
+        <div class="results">
+          <div class="result-row">
+            <div>
+              <h3>Vehicle Price</h3>
+              <div class="small">Loan details & results</div>
+            </div>
+            <div class="value" id="vehiclePriceVal">$0.00</div>
+          </div>
 
-</div>
+          <div class="result-row">
+            <div>
+              <div class="small">Total Loan Amount</div>
+              <h3 id="totalLoanVal">$0.00</h3>
+            </div>
+            <div>
+              <div class="small">Monthly Payment</div>
+              <h3 id="monthlyVal">$0.00</h3>
+            </div>
+          </div>
+
+          <div class="chartWrap">
+            <div class="chartBox tall">
+              <canvas id="donut"></canvas>
+            </div>
+          </div>
+
+          <div class="chartWrap">
+            <div class="chartBox">
+              <canvas id="amort"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule card -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <h2 style="margin:0">Amortization schedule</h2>
+          <div class="small">View annual summary or monthly detailed schedule</div>
+        </div>
+        <div class="tableToggle">
+          <button class="tabBtn active" id="btnAnnual">Annual Schedule</button>
+          <button class="tabBtn" id="btnMonthly">Monthly Schedule</button>
+        </div>
+      </div>
+
+      <div id="scheduleWrap" class="tableWrap card" style="margin-top:12px;padding:12px"></div>
+    </div>
+  </div>
 
 <script>
-function toggleAcc(id){document.getElementById(id).classList.toggle("open")}
-function roundIRS(v){return Math.round(v)}
-function usd(v){return "$"+roundIRS(v).toLocaleString("en-US")}
-
-const stdDed={2025:{single:14600,married:29200,separate:14600,head:21900},
-              2026:{single:15000,married:30000,separate:15000,head:22500}};
-const fedBrackets={single:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
-married:[[0,23200,.1],[23200,94300,.12],[94300,201050,.22],[201050,Infinity,.24]],
-separate:[[0,11600,.1],[11600,47150,.12],[47150,100525,.22],[100525,Infinity,.24]],
-head:[[0,16550,.1],[16550,63100,.12],[63100,100500,.22],[100500,Infinity,.24]]};
-const stateBrackets={CA:[[0,10099,.01],[10099,23942,.02],[23942,37788,.04],[37788,52455,.06],[52455,Infinity,.08]],
-NY:[[0,8500,.04],[8500,11700,.045],[11700,Infinity,.0525]],TX:[]};
-
-function progTax(i,b){let t=0;for(const[m,x,r]of b){if(i>m)t+=(Math.min(i,x)-m)*r}return t}
-let taxChart=null;
-
-function calculate(){
-const wages=+wages.value||0,withh=+withheld.value||0,se=+seIncome.value||0,st=+stcg.value||0,lt=+ltcg.value||0;
-const adv=(+interest.value||0)+(+dividends.value||0)+(+otherIncome.value||0);
-const statusV=status.value,yearV=year.value,stateV=state.value;
-const kids=+childDep.value||0,others=+otherDep.value||0;
-
-const seTax=se>0?se*0.9235*0.153:0,seDed=seTax/2;
-const gross=wages+st+se+adv;
-let taxable=Math.max(0,gross-seDed-stdDed[yearV][statusV]);
-let fed=progTax(taxable,fedBrackets[statusV]);
-fed=Math.max(0,fed-(kids*2000+others*500));
-const stTax=stateBrackets[stateV]?progTax(taxable,stateBrackets[stateV]):0;
-const total=fed+stTax+seTax;
-const refundV=withh-total;
-
-results.style.display=es.style.display="block";
-federalTax.textContent=usd(fed);
-stateTax.textContent=usd(stTax);
-seTax.textContent=usd(seTax);
-totalTax.textContent=usd(total);
-refund.textContent=refundV>=0?"Refund "+usd(refundV):"Owed "+usd(-refundV);
-
-const q=Math.max(0,total-withh)/4;
-q1.textContent=q2.textContent=q3.textContent=q4.textContent=usd(q);
-
-if(taxChart)taxChart.destroy();
-taxChart=new Chart(chart,{type:"pie",data:{labels:["Federal","State","SE"],datasets:[{data:[fed,stTax,seTax]}]}});
-
-results.scrollIntoView({behavior:"smooth"});
+/* currency formatting map */
+const currencyLocales = {
+  USD: { locale: 'en-US', currency: 'USD' },
+  EUR: { locale: 'de-DE', currency: 'EUR' },
+  CAD: { locale: 'en-CA', currency: 'CAD' },
+  GBP: { locale: 'en-GB', currency: 'GBP' },
+  JPY: { locale: 'ja-JP', currency: 'JPY' },
+  INR: { locale: 'en-IN', currency: 'INR' }
+};
+function moneyFmt(amount, code='USD'){
+  const cfg = currencyLocales[code] || currencyLocales.USD;
+  try {
+    return new Intl.NumberFormat(cfg.locale, { style:'currency', currency: cfg.currency, maximumFractionDigits:2 }).format(amount);
+  } catch(e){
+    return Number(amount).toFixed(2);
+  }
 }
 
-function downloadPDF(){
-const{jsPDF}=window.jspdf;const p=new jsPDF();
-p.text("Income Tax Summary",20,20);
-p.text("Total Tax: "+totalTax.textContent,20,40);
-p.text("Result: "+refund.textContent,20,50);
-p.save("income-tax-summary.pdf");
+/* short DOM helper */
+const $ = id => document.getElementById(id);
+
+/* inputs object for easy reference */
+const inputs = {
+  price: $('price'),
+  term: $('term'),
+  rate: $('rate'),
+  cash: $('cash'),
+  down: $('down'),
+  tradeValue: $('tradeValue'),
+  owedTrade: $('owedTrade'),
+  salesTax: $('salesTax'),
+  fees: $('fees'),
+  currencyTop: $('currencyTop'),
+  calcBtn: $('calc'),
+  resetBtn: $('reset'),
+  printBtn: $('printBtn'),
+  csvBtn: $('csv')
+};
+
+let donutChart = null;
+let amortChart = null;
+
+/* create charts */
+function createCharts(){
+  const donutCtx = $('donut').getContext('2d');
+  donutChart = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: { labels: ['Principal','Interest'], datasets: [{ data: [1,1], backgroundColor: ['#1f77b4','#7ac142'] }]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'}}}
+  });
+
+  const amortCtx = $('amort').getContext('2d');
+  amortChart = new Chart(amortCtx, {
+    type:'line',
+    data:{
+      labels:[],
+      datasets:[
+        {label:'Balance', data:[], borderColor:'#1f77b4', fill:false, pointRadius:3},
+        {label:'Interest', data:[], borderColor:'#7ac142', fill:false, pointRadius:2},
+        {label:'Payment', data:[], borderColor:'#d44', fill:false, pointRadius:2}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        x:{ title:{display:true, text:'Month'} },
+        y:{ title:{display:false} }
+      },
+      plugins:{legend:{position:'top'}}
+    }
+  });
 }
+
+/* main calculate function */
+function calculate(e){
+  if(e && e.preventDefault) e.preventDefault();
+
+  const currency = inputs.currencyTop.value || 'USD';
+  const price = Number(inputs.price.value) || 0;
+  const term = Math.max(1, parseInt(inputs.term.value || 0));
+  const annualRate = Number(inputs.rate.value) || 0;
+  const monthlyRate = annualRate/100/12;
+  const cash = Number(inputs.cash.value) || 0;
+  const down = Number(inputs.down.value) || 0;
+  const trade = Number(inputs.tradeValue.value) || 0;
+  const owedTrade = Number(inputs.owedTrade.value) || 0;
+  const salesTax = Number(inputs.salesTax.value) || 0;
+  const fees = Number(inputs.fees.value) || 0;
+
+  // taxable base and loan amount
+  const taxableBase = Math.max(0, price - cash - down - trade + owedTrade);
+  const salesTaxAmount = taxableBase * (salesTax/100);
+  const loanAmount = taxableBase + salesTaxAmount + fees;
+
+  // monthly payment
+  let monthlyPayment = 0;
+  if (monthlyRate === 0) {
+    monthlyPayment = loanAmount / term;
+  } else {
+    monthlyPayment = loanAmount * (monthlyRate / (1 - Math.pow(1+monthlyRate, -term)));
+  }
+
+  // build month schedule
+  const schedule = [];
+  let balance = loanAmount;
+  let totalInterest = 0;
+  for (let m=1; m<=term; m++){
+    const interest = balance * monthlyRate;
+    const principal = Math.min(balance, monthlyPayment - interest);
+    const payment = interest + principal;
+    balance = Math.max(0, balance - principal);
+    totalInterest += interest;
+    schedule.push({ month: m, payment, principal, interest, balance });
+  }
+
+  // annual summary
+  const annual = {};
+  schedule.forEach(r=>{
+    const y = Math.ceil(r.month/12);
+    if(!annual[y]) annual[y] = { interest:0, principal:0, ending:0 };
+    annual[y].interest += r.interest;
+    annual[y].principal += r.principal;
+    annual[y].ending = r.balance;
+  });
+
+  // update UI values
+  $('vehiclePriceVal').textContent = moneyFmt(price, currency);
+  $('totalLoanVal').textContent = moneyFmt(loanAmount, currency);
+  $('monthlyVal').textContent = moneyFmt(monthlyPayment, currency);
+
+  // update charts
+  if (donutChart){
+    donutChart.data.datasets[0].data = [loanAmount, totalInterest];
+    donutChart.update();
+  }
+  if (amortChart){
+    amortChart.data.labels = schedule.map(r=>String(r.month));
+    amortChart.data.datasets[0].data = schedule.map(r=>r.balance);
+    amortChart.data.datasets[1].data = schedule.map(r=>r.interest);
+    amortChart.data.datasets[2].data = schedule.map(r=>r.payment);
+    amortChart.update();
+  }
+
+  // render schedule tables
+  buildSchedule(schedule, annual, currency);
+}
+
+/* build HTML schedule tables and attach toggles + CSV handler */
+function buildSchedule(monthly, annual, currency){
+  const wrap = $('scheduleWrap');
+
+  // annual table html
+  let annHtml = '<div id="annualTable"><table><thead><tr><th>Year</th><th>Interest</th><th>Principal</th><th>Ending Balance</th></tr></thead><tbody>';
+  Object.keys(annual).sort((a,b)=>a-b).forEach(y=>{
+    annHtml += `<tr><td>${y}</td><td>${moneyFmt(annual[y].interest,currency)}</td><td>${moneyFmt(annual[y].principal,currency)}</td><td>${moneyFmt(annual[y].ending,currency)}</td></tr>`;
+  });
+  annHtml += '</tbody></table></div>';
+
+  // monthly table html
+  let monHtml = '<div id="monthlyTable" style="display:none"><table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></tr></thead><tbody>';
+  monthly.forEach(r=>{
+    monHtml += `<tr><td>${r.month}</td><td>${moneyFmt(r.payment,currency)}</td><td>${moneyFmt(r.principal,currency)}</td><td>${moneyFmt(r.interest,currency)}</td><td>${moneyFmt(r.balance,currency)}</td></tr>`;
+  });
+  monHtml += '</tbody></table></div>';
+
+  wrap.innerHTML = annHtml + monHtml;
+
+  // toggle buttons
+  const btnA = $('btnAnnual');
+  const btnM = $('btnMonthly');
+  btnA.classList.add('active'); btnM.classList.remove('active');
+
+  btnA.onclick = () => {
+    $('annualTable').style.display = 'block';
+    $('monthlyTable').style.display = 'none';
+    btnA.classList.add('active'); btnM.classList.remove('active');
+  };
+  btnM.onclick = () => {
+    $('annualTable').style.display = 'none';
+    $('monthlyTable').style.display = 'block';
+    btnM.classList.add('active'); btnA.classList.remove('active');
+  };
+
+  // single CSV handler (safe, working)
+  inputs.csvBtn.onclick = () => {
+    const rows = 'Month','Payment','Principal','Interest','EndingBalance';
+    monthly.forEach(r => rows.push([
+      r.month,
+      r.payment.toFixed(2),
+      r.principal.toFixed(2),
+      r.interest.toFixed(2),
+      r.balance.toFixed(2)
+    ]));
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'amortization_monthly.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+}
+
+/* reset defaults */
+function resetForm(e){
+  if(e && e.preventDefault) e.preventDefault();
+  inputs.price.value = 50000;
+  inputs.term.value = 60;
+  inputs.rate.value = 5;
+  inputs.cash.value = 0;
+  inputs.down.value = 10000;
+  inputs.tradeValue.value = 0;
+  inputs.owedTrade.value = 0;
+  inputs.salesTax.value = 7;
+  inputs.fees.value = 2000;
+  inputs.currencyTop.value = 'USD';
+  calculate();
+}
+
+/* init on load */
+window.addEventListener('load', ()=>{
+  createCharts();
+
+  // single wiring (no duplicates)
+  inputs.calcBtn.addEventListener('click', calculate);
+  inputs.resetBtn.addEventListener('click', resetForm);
+  inputs.printBtn.addEventListener('click', ()=>window.print());
+
+  // initial render
+  resetForm();
+
+  // safe resize handler (correct donut resize)
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (amortChart) amortChart.resize();
+      if (donutChart) donutChart.resize();
+    }, 150);
+  });
+});
 </script>
-
 </body>
 </html>
